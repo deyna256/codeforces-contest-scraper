@@ -6,6 +6,7 @@ from bs4 import BeautifulSoup
 from loguru import logger
 import fitz  # PyMuPDF
 
+from codeforces_editorial.config import get_settings
 from codeforces_editorial.fetchers.http_client import HTTPClient
 from codeforces_editorial.models import TutorialData, TutorialFormat, Language
 from codeforces_editorial.utils.exceptions import ParsingError
@@ -66,7 +67,16 @@ class TutorialParser:
         """Parse HTML tutorial."""
         logger.debug("Parsing as HTML")
 
-        html = self.http.get_text(url)
+        # Use JS rendering for blog pages (editorials are usually posted as blog entries)
+        # which may load content dynamically
+        if "/blog/" in url or "/contest/" in url:
+            settings = get_settings()
+            wait_time = settings.http_js_wait
+            logger.info(f"Using JS rendering for blog/contest page (wait: {wait_time}ms)")
+            html = self.http.get_text_with_js(url, wait_time=wait_time)
+        else:
+            html = self.http.get_text(url)
+
         soup = BeautifulSoup(html, "lxml")
 
         # Remove script and style tags
