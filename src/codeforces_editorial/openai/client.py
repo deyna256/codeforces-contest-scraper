@@ -7,7 +7,7 @@ from loguru import logger
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 from codeforces_editorial.config import get_settings
-from codeforces_editorial.utils.exceptions import ClaudeAPIError  # Reuse same exception
+from codeforces_editorial.utils.exceptions import OpenAIAPIError
 
 
 class OpenAIClient:
@@ -26,7 +26,7 @@ class OpenAIClient:
         self.model = model or settings.openai_model
 
         if not self.api_key:
-            raise ClaudeAPIError("OpenAI API key not configured")
+            raise OpenAIAPIError("OpenAI API key not configured")
 
         openai.api_key = self.api_key
         logger.debug(f"Initialized OpenAI client with model: {self.model}")
@@ -56,7 +56,7 @@ class OpenAIClient:
             OpenAI's response text
 
         Raises:
-            ClaudeAPIError: If API call fails
+            OpenAIAPIError: If API call fails
         """
         logger.debug(f"Sending message to OpenAI (model: {self.model})")
         logger.debug(f"Prompt length: {len(prompt)} chars")
@@ -88,11 +88,11 @@ class OpenAIClient:
 
         except openai.APIError as e:
             logger.error(f"OpenAI API error: {e}")
-            raise ClaudeAPIError(f"OpenAI API error: {e}") from e
+            raise OpenAIAPIError(f"OpenAI API error: {e}") from e
 
         except Exception as e:
             logger.error(f"Unexpected error calling OpenAI API: {e}")
-            raise ClaudeAPIError(f"Failed to call OpenAI API: {e}") from e
+            raise OpenAIAPIError(f"Failed to call OpenAI API: {e}") from e
 
     def find_editorial_link(self, contest_html: str, problem_id: str) -> Optional[str]:
         """
@@ -106,7 +106,7 @@ class OpenAIClient:
             Editorial URL if found, None otherwise
 
         Raises:
-            ClaudeAPIError: If API call fails
+            OpenAIAPIError: If API call fails
         """
         from codeforces_editorial.openai.prompts import get_find_editorial_prompt
 
@@ -133,11 +133,11 @@ class OpenAIClient:
             logger.info(f"Found editorial link: {response}")
             return response
 
-        except ClaudeAPIError:
+        except OpenAIAPIError:
             raise
         except Exception as e:
             logger.error(f"Error in find_editorial_link: {e}")
-            raise ClaudeAPIError(f"Failed to find editorial link: {e}") from e
+            raise OpenAIAPIError(f"Failed to find editorial link: {e}") from e
 
     def extract_solution(
         self,
@@ -157,7 +157,7 @@ class OpenAIClient:
             Dictionary with extracted solution components
 
         Raises:
-            ClaudeAPIError: If API call fails
+            OpenAIAPIError: If API call fails
         """
         from codeforces_editorial.openai.prompts import get_extract_solution_prompt
         from codeforces_editorial.models import ProblemIdentifier
@@ -187,11 +187,11 @@ class OpenAIClient:
                 "problem_id": problem_id,
             }
 
-        except ClaudeAPIError:
+        except OpenAIAPIError:
             raise
         except Exception as e:
             logger.error(f"Error in extract_solution: {e}")
-            raise ClaudeAPIError(f"Failed to extract solution: {e}") from e
+            raise OpenAIAPIError(f"Failed to extract solution: {e}") from e
 
     def validate_editorial_content(
         self,
@@ -209,7 +209,7 @@ class OpenAIClient:
             True if content contains editorial for the problem
 
         Raises:
-            ClaudeAPIError: If API call fails
+            OpenAIAPIError: If API call fails
         """
         from codeforces_editorial.openai.prompts import get_validate_editorial_prompt
 

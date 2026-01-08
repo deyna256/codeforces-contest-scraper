@@ -1,6 +1,5 @@
 """Configuration module for codeforces-editorial-finder."""
 
-import os
 from pathlib import Path
 from typing import Optional
 
@@ -13,53 +12,28 @@ class Settings(BaseSettings):
 
     # OpenAI API
     openai_api_key: str = Field(..., description="OpenAI API key")
-    openai_model: str = Field(
-        default="gpt-4o",
-        description="OpenAI model to use"
-    )
-
-    # Claude API (optional, kept for compatibility)
-    claude_api_key: Optional[str] = Field(
-        default=None,
-        description="Anthropic Claude API key"
-    )
-    claude_model: str = Field(
-        default="claude-3-5-sonnet-20241022",
-        description="Claude model to use"
-    )
+    openai_model: str = Field(default="gpt-4o", description="OpenAI model to use")
 
     # Cache
     cache_dir: str = Field(
-        default="~/.cache/codeforces-editorial",
-        description="Directory for cache storage"
+        default="~/.cache/codeforces-editorial", description="Directory for cache storage"
     )
     cache_ttl_hours: int = Field(
         default=168,  # 7 days
-        description="Cache TTL in hours"
+        description="Cache TTL in hours",
     )
 
     # HTTP
-    http_timeout: int = Field(
-        default=30,
-        description="HTTP request timeout in seconds"
-    )
-    http_retries: int = Field(
-        default=3,
-        description="Number of HTTP retry attempts"
-    )
+    http_timeout: int = Field(default=30, description="HTTP request timeout in seconds")
+    http_retries: int = Field(default=3, description="Number of HTTP retry attempts")
     user_agent: str = Field(
-        default="codeforces-editorial-finder/1.0",
-        description="User agent for HTTP requests"
+        default="codeforces-editorial-finder/1.0", description="User agent for HTTP requests"
     )
 
     # Logging
-    log_level: str = Field(
-        default="INFO",
-        description="Logging level"
-    )
+    log_level: str = Field(default="INFO", description="Logging level")
     log_file: Optional[str] = Field(
-        default=None,
-        description="Log file path (None for stdout only)"
+        default=None, description="Log file path (None for stdout only)"
     )
 
     model_config = SettingsConfigDict(

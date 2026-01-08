@@ -31,8 +31,8 @@ class EditorialLoadError(CodeforcesEditorialError):
     pass
 
 
-class ClaudeAPIError(CodeforcesEditorialError):
-    """Error communicating with Claude API."""
+class OpenAIAPIError(CodeforcesEditorialError):
+    """Error communicating with OpenAI API."""
 
     pass
 

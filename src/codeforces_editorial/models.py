@@ -94,7 +94,7 @@ class Editorial:
     notes: Optional[str] = None
     source_url: Optional[str] = None
     extracted_at: datetime = field(default_factory=datetime.now)
-    claude_model: Optional[str] = None
+    ai_model: Optional[str] = None
 
 
 @dataclass
@@ -141,7 +141,7 @@ class CachedEditorial:
                 "notes": self.editorial.notes,
                 "source_url": self.editorial.source_url,
                 "extracted_at": self.editorial.extracted_at.isoformat(),
-                "claude_model": self.editorial.claude_model,
+                "ai_model": self.editorial.ai_model,
             },
             "tutorial_url": self.tutorial_url,
             "tutorial_format": self.tutorial_format.value,
@@ -179,7 +179,7 @@ class CachedEditorial:
             notes=data["editorial"].get("notes"),
             source_url=data["editorial"].get("source_url"),
             extracted_at=datetime.fromisoformat(data["editorial"]["extracted_at"]),
-            claude_model=data["editorial"].get("claude_model"),
+            ai_model=data["editorial"].get("ai_model"),
         )
 
         return cls(

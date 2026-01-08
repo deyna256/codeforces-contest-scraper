@@ -1,4 +1,4 @@
-"""Editorial extractor using Claude API."""
+"""Editorial extractor using OpenAI API."""
 
 import re
 from datetime import datetime
@@ -81,10 +81,10 @@ class EditorialExtractor:
         source_url: str,
     ) -> Editorial:
         """
-        Parse Claude's response into Editorial object.
+        Parse AI response into Editorial object.
 
         Args:
-            response: Raw response from Claude
+            response: Raw response from OpenAI
             identifier: Problem identifier
             source_url: Tutorial URL
 
@@ -114,7 +114,7 @@ class EditorialExtractor:
             notes=notes,
             source_url=source_url,
             extracted_at=datetime.now(),
-            claude_model=self.ai_client.model,  # Keep field name for compatibility
+            ai_model=self.ai_client.model,
         )
 
     def _extract_section(self, text: str, headers: list[str]) -> Optional[str]:

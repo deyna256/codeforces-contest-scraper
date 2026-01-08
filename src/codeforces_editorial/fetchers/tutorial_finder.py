@@ -1,4 +1,4 @@
-"""Tutorial finder using Claude API."""
+"""Tutorial finder using OpenAI API."""
 
 from typing import Optional
 import re
