@@ -122,9 +122,7 @@ class EditorialOrchestrator:
             raise
         except Exception as e:
             logger.error(f"Unexpected error in orchestrator: {e}")
-            raise CodeforcesEditorialError(
-                f"Failed to get editorial: {e}"
-            ) from e
+            raise CodeforcesEditorialError(f"Failed to get editorial: {e}") from e
 
     def get_editorial_markdown(self, url: str) -> str:
         """

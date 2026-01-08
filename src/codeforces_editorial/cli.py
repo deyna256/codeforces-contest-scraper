@@ -19,7 +19,8 @@ console = Console()
 @click.command()
 @click.argument("url", required=True)
 @click.option(
-    "--output", "-o",
+    "--output",
+    "-o",
     type=click.Path(),
     help="Output file path (default: stdout)",
 )
@@ -34,7 +35,8 @@ console = Console()
     help="Clear cache before running",
 )
 @click.option(
-    "--verbose", "-v",
+    "--verbose",
+    "-v",
     is_flag=True,
     help="Enable verbose logging",
 )
@@ -64,6 +66,7 @@ def main(
     # Set API key if provided
     if api_key:
         import os
+
         os.environ["OPENAI_API_KEY"] = api_key
 
     try:
@@ -90,14 +93,16 @@ def main(
             else:
                 # Display to console with rich formatting
                 console.print("\n")
-                console.print(Panel(
-                    Markdown(markdown),
-                    title="[bold cyan]Editorial[/bold cyan]",
-                    border_style="cyan",
-                ))
+                console.print(
+                    Panel(
+                        Markdown(markdown),
+                        title="[bold cyan]Editorial[/bold cyan]",
+                        border_style="cyan",
+                    )
+                )
 
     except CodeforcesEditorialError as e:
-        console.print(f"[red]Error:[/red] {e}", err=True)
+        console.print(f"[red]Error:[/red] {e}")
         sys.exit(1)
 
     except KeyboardInterrupt:
@@ -105,9 +110,10 @@ def main(
         sys.exit(130)
 
     except Exception as e:
-        console.print(f"[red]Unexpected error:[/red] {e}", err=True)
+        console.print(f"[red]Unexpected error:[/red] {e}")
         if verbose:
             import traceback
+
             traceback.print_exc()
         sys.exit(1)
 

@@ -8,6 +8,7 @@ from typing import Optional
 
 class TutorialFormat(str, Enum):
     """Tutorial content format."""
+
     HTML = "html"
     PDF = "pdf"
     UNKNOWN = "unknown"
@@ -15,6 +16,7 @@ class TutorialFormat(str, Enum):
 
 class Language(str, Enum):
     """Tutorial language."""
+
     ENGLISH = "en"
     RUSSIAN = "ru"
     AUTO = "auto"
@@ -23,6 +25,7 @@ class Language(str, Enum):
 @dataclass(frozen=True)
 class ProblemIdentifier:
     """Identifies a specific Codeforces problem."""
+
     contest_id: str
     problem_id: str
     is_gym: bool = False
@@ -41,6 +44,7 @@ class ProblemIdentifier:
 @dataclass
 class ProblemData:
     """Data extracted from a problem page."""
+
     identifier: ProblemIdentifier
     title: str
     url: str
@@ -56,6 +60,7 @@ class ProblemData:
 @dataclass
 class TutorialData:
     """Tutorial/editorial content and metadata."""
+
     url: str
     format: TutorialFormat
     content: str  # Raw HTML or extracted text
@@ -68,6 +73,7 @@ class TutorialData:
 @dataclass
 class CodeSnippet:
     """Code snippet from editorial."""
+
     language: str
     code: str
     description: Optional[str] = None
@@ -76,6 +82,7 @@ class CodeSnippet:
 @dataclass
 class Editorial:
     """Extracted editorial/solution for a problem."""
+
     problem_id: str
     solution_text: str
     approach: Optional[str] = None
@@ -93,6 +100,7 @@ class Editorial:
 @dataclass
 class CachedEditorial:
     """Cached editorial with metadata."""
+
     problem: ProblemIdentifier
     editorial: Editorial
     tutorial_url: str
