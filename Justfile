@@ -23,3 +23,7 @@ typecheck:
 # Format code
 format:
     uv run ruff format .
+
+# Run tests
+test:
+    uv run pytest
