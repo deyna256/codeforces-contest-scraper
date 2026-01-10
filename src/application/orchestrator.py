@@ -123,6 +123,9 @@ class AsyncEditorialOrchestrator:
         Returns:
             CachedEditorial if found, None otherwise
         """
+        if not self.cache_client:
+            return None
+
         try:
             cached_data = await self.cache_client.get(cache_key)
             if cached_data:
@@ -140,6 +143,9 @@ class AsyncEditorialOrchestrator:
             cache_key: Cache key
             cached_editorial: Editorial to cache
         """
+        if not self.cache_client:
+            return
+
         try:
             cached_data = cached_editorial.to_dict()
             await self.cache_client.set(cache_key, cached_data)
