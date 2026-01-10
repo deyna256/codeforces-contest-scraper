@@ -36,17 +36,23 @@ async def provide_orchestrator(state: "State") -> AsyncGenerator[AsyncEditorialO
     ai_client = AsyncOpenAIClient()
     cache_client = AsyncRedisCache()
 
+    use_cache = False
     try:
         # Connect to Redis
         await cache_client.connect()
         logger.debug("Connected to Redis for request")
+        use_cache = True
+    except Exception as e:
+        logger.warning(f"Failed to connect to Redis, caching disabled: {e}")
+        # Proceed without cache
 
+    try:
         # Create orchestrator with dependency injection
         orchestrator = AsyncEditorialOrchestrator(
             http_client=http_client,
             ai_client=ai_client,
-            cache_client=cache_client,
-            use_cache=True,
+            cache_client=cache_client if use_cache else None,
+            use_cache=use_cache,
         )
 
         logger.debug("Orchestrator created with dependencies")
