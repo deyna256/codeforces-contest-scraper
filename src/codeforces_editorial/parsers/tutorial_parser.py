@@ -1,5 +1,3 @@
-"""Parser for tutorial content (HTML and PDF)."""
-
 from typing import Optional
 
 from bs4 import BeautifulSoup
@@ -13,24 +11,15 @@ from codeforces_editorial.utils.exceptions import ParsingError
 
 
 class TutorialParser:
-    """Parses tutorial content from HTML or PDF."""
-
     def __init__(self, http_client: Optional[HTTPClient] = None):
-        """
-        Initialize parser.
-
-        Args:
-            http_client: HTTP client
-        """
+        """Initialize the parser."""
         self.http = http_client or HTTPClient()
         self._should_close_http = http_client is None
 
     def __enter__(self):
-        """Context manager entry."""
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        """Context manager exit."""
         if self._should_close_http:
             self.http.close()
 
@@ -50,7 +39,6 @@ class TutorialParser:
         logger.info(f"Parsing tutorial from: {url}")
 
         try:
-            # Detect content type
             content_type = self.http.get_content_type(url)
             logger.debug(f"Content type: {content_type}")
 
@@ -79,7 +67,6 @@ class TutorialParser:
 
         soup = BeautifulSoup(html, "lxml")
 
-        # Remove script and style tags
         for tag in soup(["script", "style", "nav", "footer"]):
             tag.decompose()
 
@@ -111,7 +98,6 @@ class TutorialParser:
 
         pdf_bytes = self.http.get_bytes(url)
 
-        # Extract text from PDF
         text_content = []
 
         with fitz.open(stream=pdf_bytes, filetype="pdf") as doc:

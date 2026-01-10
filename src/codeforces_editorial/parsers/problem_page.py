@@ -1,5 +1,3 @@
-"""Parser for Codeforces problem pages."""
-
 import re
 from typing import Optional
 
@@ -13,24 +11,15 @@ from codeforces_editorial.parsers.url_parser import URLParser
 
 
 class ProblemPageParser:
-    """Parser for extracting data from Codeforces problem pages."""
-
     def __init__(self, http_client: Optional[HTTPClient] = None):
-        """
-        Initialize parser.
-
-        Args:
-            http_client: HTTP client instance (creates new one if None)
-        """
+        """Initialize parser."""
         self.http_client = http_client or HTTPClient()
         self._should_close_client = http_client is None
 
     def __enter__(self):
-        """Context manager entry."""
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        """Context manager exit."""
         if self._should_close_client:
             self.http_client.close()
 
@@ -54,20 +43,15 @@ class ProblemPageParser:
             html = self.http_client.get_text(url)
             soup = BeautifulSoup(html, "lxml")
 
-            # Extract problem title
             title = self._extract_title(soup)
 
-            # Extract contest name
             contest_name = self._extract_contest_name(soup)
 
-            # Extract time and memory limits
             time_limit = self._extract_time_limit(soup)
             memory_limit = self._extract_memory_limit(soup)
 
-            # Extract problem description
             description = self._extract_description(soup)
 
-            # Extract tags
             tags = self._extract_tags(soup)
 
             problem_data = ProblemData(
@@ -91,12 +75,10 @@ class ProblemPageParser:
     def _extract_title(self, soup: BeautifulSoup) -> str:
         """Extract problem title."""
         try:
-            # Try to find problem title in div.title
+            # Strip leading problem identifiers like "A." or "1234A."
             title_div = soup.find("div", class_="title")
             if title_div:
-                # Remove problem ID (e.g., "A. " or "1234A. ")
                 title_text = title_div.get_text(strip=True)
-                # Remove leading problem identifier
                 title_text = re.sub(r"^[A-Z]\d*\.\s*", "", title_text)
                 return title_text
 
@@ -118,7 +100,6 @@ class ProblemPageParser:
     def _extract_contest_name(self, soup: BeautifulSoup) -> Optional[str]:
         """Extract contest name."""
         try:
-            # Look for contest name in breadcrumbs or header
             breadcrumbs = soup.find("div", class_="breadcrumbs")
             if breadcrumbs:
                 links = breadcrumbs.find_all("a")
@@ -154,10 +135,8 @@ class ProblemPageParser:
     def _extract_description(self, soup: BeautifulSoup) -> Optional[str]:
         """Extract problem description (first few paragraphs)."""
         try:
-            # Find problem statement
             statement = soup.find("div", class_="problem-statement")
             if statement:
-                # Get first few paragraphs
                 paragraphs = statement.find_all("p", limit=3)
                 if paragraphs:
                     return "\n\n".join(p.get_text(strip=True) for p in paragraphs)
@@ -170,7 +149,6 @@ class ProblemPageParser:
         """Extract problem tags."""
         try:
             tags = []
-            # Tags are usually in span or div with specific classes
             tag_elements = soup.find_all("span", class_="tag-box")
             for elem in tag_elements:
                 tag_text = elem.get_text(strip=True)
