@@ -4,6 +4,9 @@ FROM ghcr.io/astral-sh/uv:python3.13-bookworm-slim AS builder
 # Enable bytecode compilation
 ENV UV_COMPILE_BYTECODE=1
 
+# Do not install development dependencies
+ENV UV_NO_DEV=1
+
 # Copy from the cache instead of linking since it's a container
 ENV UV_LINK_MODE=copy
 
@@ -42,12 +45,16 @@ RUN apt-get update && \
 # Copy the virtual environment from the builder stage
 COPY --from=builder /app/.venv /.venv
 
+# Copy Playwright browsers from the builder stage
+COPY --from=builder /root/.cache/ms-playwright /root/.cache/ms-playwright
+
 # Environment variables from example
 ENV PATH="/.venv/bin:$PATH" \
     VIRTUAL_ENV="/.venv" \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PYTHONPATH=/app
+    PYTHONPATH=/app \
+    UV_NO_DEV=1
 
 WORKDIR /app
 
