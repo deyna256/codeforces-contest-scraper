@@ -1,8 +1,8 @@
 import pytest
 
-from domain.parsers.url_parser import URLParser, parse_problem_url
-from domain.models import ProblemIdentifier
-from domain.exceptions import URLParseError
+from codeforces_editorial.parsers.url_parser import URLParser, parse_problem_url
+from codeforces_editorial.models import ProblemIdentifier
+from codeforces_editorial.utils.exceptions import URLParseError
 
 
 @pytest.mark.parametrize(

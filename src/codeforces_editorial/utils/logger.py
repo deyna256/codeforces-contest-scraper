@@ -6,7 +6,7 @@ from typing import Optional
 
 from loguru import logger
 
-from config import get_settings
+from codeforces_editorial.config import get_settings
 
 
 def setup_logger(

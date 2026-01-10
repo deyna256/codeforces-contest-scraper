@@ -6,29 +6,29 @@ from typing import Optional
 
 from loguru import logger
 
-from domain.models import (
+from codeforces_editorial.openai.client import OpenAIClient
+from codeforces_editorial.models import (
     Editorial,
     CodeSnippet,
     ProblemIdentifier,
     TutorialData,
 )
-from domain.exceptions import ExtractionError
-from infrastructure.openai_client import AsyncOpenAIClient
+from codeforces_editorial.utils.exceptions import ExtractionError
 
 
 class EditorialExtractor:
     """Extracts editorial/solution from tutorial content using OpenAI."""
 
-    def __init__(self, ai_client):
+    def __init__(self, ai_client: Optional[OpenAIClient] = None):
         """
         Initialize extractor.
 
         Args:
-            ai_client: Async OpenAI API client
+            ai_client: OpenAI API client
         """
-        self.ai_client = ai_client
+        self.ai_client = ai_client or OpenAIClient()
 
-    async def extract(
+    def extract(
         self,
         tutorial: TutorialData,
         identifier: ProblemIdentifier,
@@ -52,7 +52,7 @@ class EditorialExtractor:
 
         try:
             # Use OpenAI to extract solution
-            result = await self.ai_client.extract_solution(
+            result = self.ai_client.extract_solution(
                 tutorial_content=tutorial.content,
                 problem_id=identifier.problem_id,
                 problem_title=problem_title,
@@ -245,7 +245,7 @@ def extract_editorial(
     tutorial: TutorialData,
     identifier: ProblemIdentifier,
     problem_title: str = "",
-    ai_client: Optional[AsyncOpenAIClient] = None,
+    ai_client: Optional[OpenAIClient] = None,
 ) -> Editorial:
     """
     Convenience function to extract editorial.

@@ -1,4 +1,4 @@
-"""Async HTTP client with retry logic for fetching web content."""
+"""HTTP client with retry logic for fetching web content."""
 
 from typing import Optional
 
@@ -11,16 +11,20 @@ from tenacity import (
     retry_if_exception_type,
 )
 
-from config import get_settings
-from domain.exceptions import NetworkError, ProblemNotFoundError
+from codeforces_editorial.config import get_settings
+from codeforces_editorial.utils.exceptions import NetworkError, ProblemNotFoundError
+
+# Lazy import for playwright to avoid loading it if not needed
+_playwright = None
+_browser_context = None
 
 
-class AsyncHTTPClient:
-    """Async HTTP client with retry logic and error handling."""
+class HTTPClient:
+    """HTTP client with retry logic and error handling."""
 
     def __init__(self, timeout: Optional[int] = None, user_agent: Optional[str] = None):
         """
-        Initialize async HTTP client.
+        Initialize HTTP client.
 
         Args:
             timeout: Request timeout in seconds
@@ -31,23 +35,23 @@ class AsyncHTTPClient:
         self.user_agent = user_agent or settings.user_agent
         self.retries = settings.http_retries
 
-        self.client = httpx.AsyncClient(
+        self.client = httpx.Client(
             timeout=self.timeout,
             headers={"User-Agent": self.user_agent},
             follow_redirects=True,
         )
 
-    async def __aenter__(self):
-        """Async context manager entry."""
+    def __enter__(self):
+        """Context manager entry."""
         return self
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
-        """Async context manager exit."""
-        await self.close()
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Context manager exit."""
+        self.close()
 
-    async def close(self) -> None:
+    def close(self) -> None:
         """Close the HTTP client."""
-        await self.client.aclose()
+        self.client.close()
 
     @retry(
         retry=retry_if_exception_type((httpx.TimeoutException, httpx.NetworkError)),
@@ -55,7 +59,7 @@ class AsyncHTTPClient:
         wait=wait_exponential(multiplier=1, min=2, max=10),
         reraise=True,
     )
-    async def get(self, url: str) -> httpx.Response:
+    def get(self, url: str) -> httpx.Response:
         """
         Perform GET request with retry logic.
 
@@ -72,7 +76,7 @@ class AsyncHTTPClient:
         logger.debug(f"Fetching URL: {url}")
 
         try:
-            response = await self.client.get(url)
+            response = self.client.get(url)
             response.raise_for_status()
             logger.debug(f"Successfully fetched URL: {url} (status: {response.status_code})")
             return response
@@ -92,7 +96,7 @@ class AsyncHTTPClient:
             logger.error(f"Unexpected error fetching {url}: {e}")
             raise NetworkError(f"Failed to fetch {url}: {e}") from e
 
-    async def get_text(self, url: str) -> str:
+    def get_text(self, url: str) -> str:
         """
         Fetch URL and return text content.
 
@@ -102,10 +106,10 @@ class AsyncHTTPClient:
         Returns:
             Response text content
         """
-        response = await self.get(url)
+        response = self.get(url)
         return response.text
 
-    async def get_bytes(self, url: str) -> bytes:
+    def get_bytes(self, url: str) -> bytes:
         """
         Fetch URL and return binary content.
 
@@ -115,10 +119,10 @@ class AsyncHTTPClient:
         Returns:
             Response binary content
         """
-        response = await self.get(url)
+        response = self.get(url)
         return response.content
 
-    async def get_content_type(self, url: str) -> str:
+    def get_content_type(self, url: str) -> str:
         """
         Get content type of URL.
 
@@ -128,10 +132,10 @@ class AsyncHTTPClient:
         Returns:
             Content-Type header value
         """
-        response = await self.get(url)
+        response = self.get(url)
         return response.headers.get("content-type", "").lower()
 
-    async def get_text_with_js(self, url: str, wait_time: int = 3000) -> str:
+    def get_text_with_js(self, url: str, wait_time: int = 3000) -> str:
         """
         Fetch URL with JavaScript rendering (for dynamic content).
 
@@ -151,24 +155,24 @@ class AsyncHTTPClient:
         logger.info(f"Fetching URL with JS rendering: {url} (wait: {wait_time}ms)")
 
         try:
-            from playwright.async_api import async_playwright
+            from playwright.sync_api import sync_playwright
 
-            async with async_playwright() as p:
+            with sync_playwright() as p:
                 # Launch browser in headless mode
-                browser = await p.chromium.launch(headless=True)
-                page = await browser.new_page(user_agent=self.user_agent)
+                browser = p.chromium.launch(headless=True)
+                page = browser.new_page(user_agent=self.user_agent)
 
                 # Navigate to page
-                await page.goto(url, wait_until="domcontentloaded", timeout=self.timeout * 1000)
+                page.goto(url, wait_until="domcontentloaded", timeout=self.timeout * 1000)
 
                 # Wait for dynamic content to load
-                await page.wait_for_timeout(wait_time)
+                page.wait_for_timeout(wait_time)
 
                 # Get rendered HTML
-                content = await page.content()
+                content = page.content()
 
                 # Cleanup
-                await browser.close()
+                browser.close()
 
                 logger.info(f"Successfully fetched URL with JS: {url} ({len(content)} chars)")
                 return content
@@ -176,3 +180,8 @@ class AsyncHTTPClient:
         except Exception as e:
             logger.error(f"Failed to fetch URL with JS rendering: {url} - {e}")
             raise NetworkError(f"Failed to fetch {url} with JS rendering: {e}") from e
+
+
+def create_http_client() -> HTTPClient:
+    """Create and return a new HTTP client instance."""
+    return HTTPClient()

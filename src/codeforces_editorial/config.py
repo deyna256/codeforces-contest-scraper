@@ -22,7 +22,6 @@ class Settings(BaseSettings):
         default=168,  # 7 days
         description="Cache TTL in hours",
     )
-    redis_url: str = Field(default="redis://localhost:6379/0", description="Redis connection URL")
 
     # HTTP
     http_timeout: int = Field(default=30, description="HTTP request timeout in seconds")

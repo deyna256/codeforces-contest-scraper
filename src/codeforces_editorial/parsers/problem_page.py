@@ -6,9 +6,10 @@ from typing import Optional
 from bs4 import BeautifulSoup, Tag
 from loguru import logger
 
-from domain.models import ProblemData, ProblemIdentifier
-from domain.exceptions import ParsingError
-from domain.parsers.url_parser import URLParser
+from codeforces_editorial.models import ProblemData, ProblemIdentifier
+from codeforces_editorial.utils.exceptions import ParsingError
+from codeforces_editorial.fetchers.http_client import HTTPClient
+from codeforces_editorial.parsers.url_parser import URLParser
 
 
 class ProblemPageParser:
@@ -24,11 +25,21 @@ class ProblemPageParser:
         Initialize parser.
 
         Args:
-            http_client: Async HTTP client instance
+            http_client: HTTP client instance (creates new one if None)
         """
-        self.http_client = http_client
+        self.http_client = http_client or HTTPClient()
+        self._should_close_client = http_client is None
 
-    async def parse_problem_page(self, identifier: ProblemIdentifier) -> ProblemData:
+    def __enter__(self):
+        """Context manager entry."""
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Context manager exit."""
+        if self._should_close_client:
+            self.http_client.close()
+
+    def parse_problem_page(self, identifier: ProblemIdentifier) -> ProblemData:
         """
         Parse problem page and extract data.
         """
@@ -36,7 +47,7 @@ class ProblemPageParser:
         logger.info(f"Parsing problem page: {url}")
 
         try:
-            html = await self.http_client.get_text(url)
+            html = self.http_client.get_text(url)
             soup = BeautifulSoup(html, "lxml")
 
             # Extract minimal metadata

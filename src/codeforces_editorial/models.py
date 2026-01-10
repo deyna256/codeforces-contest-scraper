@@ -35,12 +35,6 @@ class ProblemIdentifier:
         """Get full problem identifier (e.g., '1234A')."""
         return f"{self.contest_id}{self.problem_id}"
 
-    @property
-    def cache_key(self) -> str:
-        """Get cache key for this problem."""
-        prefix = "gym_" if self.is_gym else ""
-        return f"editorial_{prefix}{self.contest_id}_{self.problem_id}"
-
     def __str__(self) -> str:
         """String representation."""
         prefix = "gym/" if self.is_gym else ""
