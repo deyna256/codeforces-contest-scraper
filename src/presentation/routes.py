@@ -2,7 +2,6 @@
 
 from litestar import Controller, post, Request
 from litestar.di import Provide
-from litestar.params import Body
 from loguru import logger
 
 from application.orchestrator import AsyncEditorialOrchestrator
