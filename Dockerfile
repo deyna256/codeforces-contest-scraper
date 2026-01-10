@@ -22,7 +22,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 
 # Copy source code
 COPY src/ ./src/
-COPY pyproject.toml uv.lock main.py ./
+COPY pyproject.toml uv.lock ./
 
 # Install the project and install Playwright dependencies/browsers
 RUN --mount=type=cache,target=/root/.cache/uv \
@@ -52,8 +52,7 @@ ENV PATH="/.venv/bin:$PATH" \
 WORKDIR /app
 
 # Copy necessary files
-COPY src/ ./src/
-COPY main.py .
+COPY src/ .
 COPY entrypoints/ /entrypoints/
 RUN chmod +x /entrypoints/*.sh
 
