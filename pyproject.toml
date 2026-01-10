@@ -1,12 +1,7 @@
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
-
 [project]
 name = "codeforces-editorial-finder"
 version = "0.1.0"
 description = "HTTP API to extract and format editorials for Codeforces problems"
-readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "MIT"}
 homepage = "https://github.com/deyna256/codeforces-editorial-finder"
@@ -44,15 +39,6 @@ dependencies = [
     "redis>=5.0.0",
 ]
 
-[tool.hatch.build.targets.wheel]
-packages = [
-    "src/domain",
-    "src/application",
-    "src/infrastructure",
-    "src/presentation",
-    "src/config.py",
-]
-
 [dependency-groups]
 dev = [
     "pytest>=7.4.0",
@@ -61,7 +47,3 @@ dev = [
     "ruff>=0.1.0",
     "ty>=0.0.10",
 ]
-
-[tool.ruff]
-line-length = 100
-target-version = "py310"
