@@ -3,6 +3,7 @@
 from litestar import Litestar
 from litestar.config.response_cache import ResponseCacheConfig
 from litestar.middleware.rate_limit import RateLimitConfig
+from litestar.openapi.config import OpenAPIConfig
 from litestar.stores.redis import RedisStore
 from loguru import logger
 
@@ -59,6 +60,13 @@ def create_app() -> Litestar:
         OpenAIAPIError: exception_to_http_response,
     }
 
+    # Configure OpenAPI documentation
+    openapi_config = OpenAPIConfig(
+        title="Codeforces Editorial Finder API",
+        version="1.0.0",
+        description="API for finding and extracting editorials for Codeforces problems",
+    )
+
     # Create LiteStar app
     app = Litestar(
         route_handlers=[EditorialController],
@@ -67,7 +75,7 @@ def create_app() -> Litestar:
         response_cache_config=response_cache_config,
         exception_handlers=exception_handlers,
         debug=settings.log_level == "DEBUG",
-        openapi_config=None,  # Disable OpenAPI docs for minimal API
+        openapi_config=openapi_config,
     )
 
     logger.info("LiteStar application created")
