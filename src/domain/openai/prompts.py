@@ -1,6 +1,6 @@
 """Prompts for OpenAI API interactions."""
 
-from codeforces_editorial.models import ProblemIdentifier
+from domain.models import ProblemIdentifier
 
 
 def get_find_editorial_prompt(contest_html: str, problem_id: str) -> str:

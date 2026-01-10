@@ -6,8 +6,8 @@ import openai
 from loguru import logger
 from tenacity import retry, stop_after_attempt, wait_exponential
 
-from codeforces_editorial.config import get_settings
-from codeforces_editorial.utils.exceptions import OpenAIAPIError
+from config import get_settings
+from domain.exceptions import OpenAIAPIError
 
 
 class OpenAIClient:
@@ -108,7 +108,7 @@ class OpenAIClient:
         Raises:
             OpenAIAPIError: If API call fails
         """
-        from codeforces_editorial.openai.prompts import get_find_editorial_prompt
+        from domain.openai.prompts import get_find_editorial_prompt
 
         logger.info(f"Using OpenAI to find editorial link for problem {problem_id}")
 
@@ -159,8 +159,8 @@ class OpenAIClient:
         Raises:
             OpenAIAPIError: If API call fails
         """
-        from codeforces_editorial.openai.prompts import get_extract_solution_prompt
-        from codeforces_editorial.models import ProblemIdentifier
+        from domain.openai.prompts import get_extract_solution_prompt
+        from domain.models import ProblemIdentifier
 
         logger.info(f"Using OpenAI to extract solution for problem {problem_id}")
 
@@ -211,7 +211,7 @@ class OpenAIClient:
         Raises:
             OpenAIAPIError: If API call fails
         """
-        from codeforces_editorial.openai.prompts import get_validate_editorial_prompt
+        from domain.openai.prompts import get_validate_editorial_prompt
 
         logger.debug(f"Validating editorial content for problem {problem_id}")
 

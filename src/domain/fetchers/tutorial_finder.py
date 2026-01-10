@@ -5,11 +5,11 @@ import re
 
 from loguru import logger
 
-from codeforces_editorial.openai.client import OpenAIClient
-from codeforces_editorial.fetchers.http_client import HTTPClient
-from codeforces_editorial.models import ProblemIdentifier
-from codeforces_editorial.parsers.url_parser import URLParser
-from codeforces_editorial.utils.exceptions import EditorialNotFoundError
+from domain.openai.client import OpenAIClient
+from domain.fetchers.http_client import HTTPClient
+from domain.models import ProblemIdentifier
+from domain.parsers.url_parser import URLParser
+from domain.exceptions import EditorialNotFoundError
 
 
 class TutorialFinder:

@@ -5,8 +5,8 @@ from urllib.parse import urlparse
 
 from loguru import logger
 
-from codeforces_editorial.models import ProblemIdentifier
-from codeforces_editorial.utils.exceptions import URLParseError
+from domain.models import ProblemIdentifier
+from domain.exceptions import URLParseError
 
 
 class URLParser:

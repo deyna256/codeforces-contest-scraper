@@ -6,14 +6,14 @@ from typing import Optional
 
 from loguru import logger
 
-from codeforces_editorial.openai.client import OpenAIClient
-from codeforces_editorial.models import (
+from domain.openai.client import OpenAIClient
+from domain.models import (
     Editorial,
     CodeSnippet,
     ProblemIdentifier,
     TutorialData,
 )
-from codeforces_editorial.utils.exceptions import ExtractionError
+from domain.exceptions import ExtractionError
 
 
 class EditorialExtractor:

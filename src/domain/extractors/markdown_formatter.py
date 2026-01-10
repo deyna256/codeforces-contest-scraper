@@ -1,6 +1,6 @@
 """Markdown formatter for editorials."""
 
-from codeforces_editorial.models import Editorial, ProblemData
+from domain.models import Editorial, ProblemData
 
 
 class MarkdownFormatter:

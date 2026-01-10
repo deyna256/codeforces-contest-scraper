@@ -6,10 +6,10 @@ from bs4 import BeautifulSoup
 from loguru import logger
 import fitz  # PyMuPDF
 
-from codeforces_editorial.config import get_settings
-from codeforces_editorial.fetchers.http_client import HTTPClient
-from codeforces_editorial.models import TutorialData, TutorialFormat, Language
-from codeforces_editorial.utils.exceptions import ParsingError
+from config import get_settings
+from domain.fetchers.http_client import HTTPClient
+from domain.models import TutorialData, TutorialFormat, Language
+from domain.exceptions import ParsingError
 
 
 class TutorialParser:

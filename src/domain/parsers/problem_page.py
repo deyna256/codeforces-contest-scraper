@@ -6,10 +6,10 @@ from typing import Optional
 from bs4 import BeautifulSoup
 from loguru import logger
 
-from codeforces_editorial.models import ProblemData, ProblemIdentifier
-from codeforces_editorial.utils.exceptions import ParsingError
-from codeforces_editorial.fetchers.http_client import HTTPClient
-from codeforces_editorial.parsers.url_parser import URLParser
+from domain.models import ProblemData, ProblemIdentifier
+from domain.exceptions import ParsingError
+from domain.fetchers.http_client import HTTPClient
+from domain.parsers.url_parser import URLParser
 
 
 class ProblemPageParser:
@@ -193,7 +193,7 @@ def parse_problem(url: str, http_client: Optional[HTTPClient] = None) -> Problem
     Returns:
         ProblemData
     """
-    from codeforces_editorial.parsers.url_parser import parse_problem_url
+    from domain.parsers.url_parser import parse_problem_url
 
     identifier = parse_problem_url(url)
 
