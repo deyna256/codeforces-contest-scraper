@@ -71,8 +71,8 @@ def create_app() -> Litestar:
     )
 
     logger.info("LiteStar application created")
-    logger.info(f"Rate limit: 10 requests per minute")
-    logger.info(f"Response cache TTL: 3600 seconds")
+    logger.info("Rate limit: 10 requests per minute")
+    logger.info("Response cache TTL: 3600 seconds")
     logger.info(f"Redis URL: {settings.redis_url}")
 
     return app

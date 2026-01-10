@@ -13,6 +13,7 @@ from domain.models import (
     TutorialData,
 )
 from domain.exceptions import ExtractionError
+from infrastructure.openai_client import AsyncOpenAIClient
 
 
 class EditorialExtractor:
@@ -244,7 +245,7 @@ def extract_editorial(
     tutorial: TutorialData,
     identifier: ProblemIdentifier,
     problem_title: str = "",
-    ai_client: Optional[OpenAIClient] = None,
+    ai_client: Optional[AsyncOpenAIClient] = None,
 ) -> Editorial:
     """
     Convenience function to extract editorial.

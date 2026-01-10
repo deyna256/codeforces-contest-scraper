@@ -24,7 +24,7 @@ from domain.exceptions import (
 from presentation.schemas import ErrorResponse
 
 if TYPE_CHECKING:
-    from litestar.types import Scope
+    pass
 
 
 def exception_to_http_response(request: Request, exc: Exception) -> Response[ErrorResponse]:

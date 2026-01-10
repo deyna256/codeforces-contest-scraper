@@ -9,7 +9,6 @@ from application.orchestrator import AsyncEditorialOrchestrator
 from infrastructure.http_client import AsyncHTTPClient
 from infrastructure.openai_client import AsyncOpenAIClient
 from infrastructure.cache_redis import AsyncRedisCache
-from config import get_settings
 
 if TYPE_CHECKING:
     from litestar.datastructures import State
@@ -31,7 +30,6 @@ async def provide_orchestrator(state: "State") -> AsyncGenerator[AsyncEditorialO
     Yields:
         AsyncEditorialOrchestrator instance
     """
-    settings = get_settings()
 
     # Initialize clients
     http_client = AsyncHTTPClient()

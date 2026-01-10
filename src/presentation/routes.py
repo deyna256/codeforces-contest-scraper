@@ -6,7 +6,6 @@ from litestar.params import Body
 from loguru import logger
 
 from application.orchestrator import AsyncEditorialOrchestrator
-from domain.models import CodeSnippet
 from presentation.dependencies import provide_orchestrator
 from presentation.schemas import (
     EditorialRequest,

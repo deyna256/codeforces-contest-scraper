@@ -1,7 +1,7 @@
 """Async Redis cache client for editorial data."""
 
 import json
-from typing import Optional, Any
+from typing import Optional
 
 import redis.asyncio as redis
 from loguru import logger

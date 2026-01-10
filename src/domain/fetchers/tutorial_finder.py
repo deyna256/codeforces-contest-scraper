@@ -8,6 +8,8 @@ from loguru import logger
 from domain.models import ProblemIdentifier
 from domain.parsers.url_parser import URLParser
 from domain.exceptions import EditorialNotFoundError
+from infrastructure.openai_client import AsyncOpenAIClient
+from infrastructure.http_client.py import AsyncHTTPClient
 
 
 class TutorialFinder:
@@ -159,8 +161,8 @@ class TutorialFinder:
 
 def find_tutorial_url(
     identifier: ProblemIdentifier,
-    ai_client: Optional[OpenAIClient] = None,
-    http_client: Optional[HTTPClient] = None,
+    ai_client: Optional[AsyncOpenAIClient] = None,
+    http_client: Optional[AsyncHTTPClient] = None,
 ) -> str:
     """
     Convenience function to find tutorial URL.
