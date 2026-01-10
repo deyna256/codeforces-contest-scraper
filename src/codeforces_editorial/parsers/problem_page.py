@@ -12,14 +12,13 @@ from codeforces_editorial.fetchers.http_client import HTTPClient
 from codeforces_editorial.parsers.url_parser import URLParser
 
 
-# Constants
-MATERIALS_CAPTION_KEYWORD = "materials"
-RELEVANT_URL_SEGMENTS = ("/blog/", "/contest/")
-CODEFORCES_BASE_URL = "https://codeforces.com"
-
-
 class ProblemPageParser:
     """Parser for extracting data from Codeforces problem pages."""
+
+    # Constants
+    MATERIALS_CAPTION_KEYWORD = "materials"
+    RELEVANT_URL_SEGMENTS = ("/blog/", "/contest/")
+    CODEFORCES_BASE_URL = "https://codeforces.com"
 
     def __init__(self, http_client: Optional[HTTPClient] = None):
         """
@@ -136,7 +135,7 @@ class ProblemPageParser:
         if not caption:
             return False
 
-        return MATERIALS_CAPTION_KEYWORD in caption.get_text(strip=True).lower()
+        return self.MATERIALS_CAPTION_KEYWORD in caption.get_text(strip=True).lower()
 
     def _extract_links_from_box(self, box: Tag) -> list[str]:
         """Extract links from sidebar box"""
@@ -146,7 +145,7 @@ class ProblemPageParser:
             href = str(link["href"])
 
             # Check if link contains any relevant path segment
-            if any(segment in href for segment in RELEVANT_URL_SEGMENTS):
+            if any(segment in href for segment in self.RELEVANT_URL_SEGMENTS):
                 full_link = self._normalize_url(href=href)
                 links.append(full_link)
         return links
@@ -154,7 +153,7 @@ class ProblemPageParser:
     def _normalize_url(self, href: str) -> str:
         """Ensure URL is absolute"""
         if href.startswith("/"):
-            return f"{CODEFORCES_BASE_URL}{href}"
+            return f"{self.CODEFORCES_BASE_URL}{href}"
         return href
 
 
