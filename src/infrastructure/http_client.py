@@ -1,16 +1,13 @@
 """Async HTTP client with retry logic for fetching web content."""
 
-import ssl
 from typing import Optional
 
-import certifi
-import httpx
+from curl_cffi.requests import AsyncSession
 from loguru import logger
 from tenacity import (
     retry,
     stop_after_attempt,
     wait_exponential,
-    retry_if_exception_type,
 )
 
 from config import get_settings
@@ -33,17 +30,8 @@ class AsyncHTTPClient:
         self.user_agent = user_agent or settings.user_agent
         self.retries = settings.http_retries
 
-        # Create SSL context with certifi certificates
-        ssl_context = ssl.create_default_context()
-        ssl_context.load_verify_locations(certifi.where())
-
-        # HTTP client with proper SSL context
-        self.client = httpx.AsyncClient(
-            timeout=self.timeout,
-            headers={"User-Agent": self.user_agent},
-            follow_redirects=True,
-            verify=ssl_context,
-        )
+        # HTTP client using curl_cffi with browser impersonation
+        self.client = AsyncSession()
 
     async def __aenter__(self):
         """Async context manager entry."""
@@ -55,17 +43,16 @@ class AsyncHTTPClient:
 
     async def close(self) -> None:
         """Close the HTTP client."""
-        await self.client.aclose()
+        await self.client.close()
 
     @retry(
-        retry=retry_if_exception_type((httpx.TimeoutException, httpx.NetworkError)),
         stop=stop_after_attempt(3),
         wait=wait_exponential(multiplier=1, min=2, max=10),
         reraise=True,
     )
-    async def get(self, url: str) -> httpx.Response:
+    async def get(self, url: str):
         """
-        Perform GET request with retry logic.
+        Perform GET request with retry logic using curl_cffi.
 
         Args:
             url: URL to fetch
@@ -80,22 +67,30 @@ class AsyncHTTPClient:
         logger.debug(f"Fetching URL: {url}")
 
         try:
-            response = await self.client.get(url)
-            response.raise_for_status()
+            # Use curl_cffi with Chrome 120 impersonation to bypass TLS fingerprinting
+            response = await self.client.get(
+                url,
+                timeout=self.timeout,
+                impersonate="chrome120",
+                allow_redirects=True,
+            )
+
+            # Check status code
+            if response.status_code == 404:
+                logger.error(f"Resource not found: {url}")
+                raise ProblemNotFoundError(f"Resource not found: {url}")
+
+            if response.status_code >= 400:
+                logger.error(f"HTTP error {response.status_code} for {url}")
+                raise NetworkError(f"HTTP error {response.status_code}: {url}")
+
             logger.debug(f"Successfully fetched URL: {url} (status: {response.status_code})")
             return response
 
-        except httpx.HTTPStatusError as e:
-            if e.response.status_code == 404:
-                logger.error(f"Resource not found: {url}")
-                raise ProblemNotFoundError(f"Resource not found: {url}") from e
-            logger.error(f"HTTP error for {url}: {e}")
-            raise NetworkError(f"HTTP error {e.response.status_code}: {url}") from e
-
-        except (httpx.TimeoutException, httpx.NetworkError) as e:
-            logger.warning(f"Network error for {url}: {e}")
-            raise  # Let tenacity retry
-
+        except ProblemNotFoundError:
+            raise
+        except NetworkError:
+            raise
         except Exception as e:
             logger.error(f"Unexpected error fetching {url}: {e}")
             raise NetworkError(f"Failed to fetch {url}: {e}") from e
@@ -111,7 +106,7 @@ class AsyncHTTPClient:
             Response text content
         """
         response = await self.get(url)
-        return response.text
+        return response.text if hasattr(response, 'text') else response.content.decode('utf-8')
 
     async def get_bytes(self, url: str) -> bytes:
         """
