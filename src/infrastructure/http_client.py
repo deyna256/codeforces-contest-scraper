@@ -1,7 +1,9 @@
 """Async HTTP client with retry logic for fetching web content."""
 
+import ssl
 from typing import Optional
 
+import certifi
 import httpx
 from loguru import logger
 from tenacity import (
@@ -31,10 +33,16 @@ class AsyncHTTPClient:
         self.user_agent = user_agent or settings.user_agent
         self.retries = settings.http_retries
 
+        # Create SSL context with certifi certificates
+        ssl_context = ssl.create_default_context()
+        ssl_context.load_verify_locations(certifi.where())
+
+        # HTTP client with proper SSL context
         self.client = httpx.AsyncClient(
             timeout=self.timeout,
             headers={"User-Agent": self.user_agent},
             follow_redirects=True,
+            verify=ssl_context,
         )
 
     async def __aenter__(self):

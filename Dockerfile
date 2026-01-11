@@ -37,7 +37,7 @@ RUN uv run playwright install chromium --with-deps
 # Final stage - using uv image as in example
 FROM ghcr.io/astral-sh/uv:python3.13-bookworm-slim
 
-# Install runtime dependencies (curl from example)
+# Install runtime dependencies
 RUN apt-get update && \
     apt-get install -y --no-install-recommends curl && \
     rm -rf /var/lib/apt/lists/*
