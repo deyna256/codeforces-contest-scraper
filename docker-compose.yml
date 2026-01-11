@@ -11,6 +11,7 @@ services:
       - HTTP_TIMEOUT=${HTTP_TIMEOUT:-30}
       - HTTP_RETRIES=${HTTP_RETRIES:-3}
       - HTTP_JS_WAIT=${HTTP_JS_WAIT:-5000}
+      - USER_AGENT=${USER_AGENT}
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
     depends_on:
       - redis
