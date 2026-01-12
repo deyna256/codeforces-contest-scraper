@@ -106,13 +106,13 @@ class Editorial:
 @dataclass
 class CachedEditorial:
     """Cached editorial with metadata."""
-
-    problem: ProblemIdentifier
     editorial: Editorial
-    tutorial_url: str
-    tutorial_format: TutorialFormat
     cached_at: datetime = field(default_factory=datetime.now)
     ttl_hours: int = 168  # 7 days default
+    problem: Optional[ProblemIdentifier] = None
+    tutorial_url: Optional[str] = None
+    tutorial_format: TutorialFormat = TutorialFormat.UNKNOWN
+
 
     @property
     def is_expired(self) -> bool:
@@ -124,10 +124,11 @@ class CachedEditorial:
         """Convert to dictionary for serialization."""
         return {
             "problem": {
-                "contest_id": self.problem.contest_id,
-                "problem_id": self.problem.problem_id,
-                "is_gym": self.problem.is_gym,
-            },
+    "contest_id": self.problem.contest_id if self.problem else None,
+    "problem_id": self.problem.problem_id if self.problem else None,
+    "is_gym": self.problem.is_gym if self.problem else False,
+},
+
             "editorial": {
                 "problem_id": self.editorial.problem_id,
                 "solution_text": self.editorial.solution_text,
