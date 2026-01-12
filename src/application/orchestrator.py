@@ -90,10 +90,7 @@ class AsyncEditorialOrchestrator:
             if self.use_cache and self.cache_client:
                 logger.info("Step 7: Caching result")
                 cached_editorial = CachedEditorial(
-                    problem=identifier,
                     editorial=editorial,
-                    tutorial_url=tutorial_url,
-                    tutorial_format=tutorial_data.format,
                 )
                 await self._save_to_cache(identifier.cache_key, cached_editorial)
 
