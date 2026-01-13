@@ -4,7 +4,7 @@ from typing import Optional
 
 from loguru import logger
 
-from domain.models import Editorial, ProblemData, CachedEditorial, ProblemIdentifier
+from domain.models import Editorial, ProblemData, CachedEditorial, ProblemIdentifier, TutorialFormat
 from domain.parsers.url_parser import URLParser
 from domain.parsers.problem_page import ProblemPageParser
 from domain.parsers.tutorial_parser import TutorialParser
@@ -95,7 +95,7 @@ class AsyncEditorialOrchestrator:
 
     async def _run_extraction_pipeline(
         self, identifier: ProblemIdentifier
-    ) -> tuple[Editorial, ProblemData, str, str]:
+    ) -> tuple[Editorial, ProblemData, str, TutorialFormat]:
         """
         Logic: Parse problem, find tutorial, parse tutorial, extract editorial.
         Returns: Editorial, ProblemData, tutorial_url, tutorial_format.
@@ -120,7 +120,11 @@ class AsyncEditorialOrchestrator:
         return editorial, problem_data, tutorial_url, tutorial_data.format
 
     async def _cache_new_editorial(
-        self, identifier: ProblemIdentifier, editorial: Editorial, url: str, fmt: str
+        self,
+        identifier: ProblemIdentifier,
+        editorial: Editorial,
+        url: str,
+        fmt: TutorialFormat,
     ) -> None:
         """Cache new editorial"""
 
