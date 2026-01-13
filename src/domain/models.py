@@ -98,13 +98,11 @@ class Editorial:
 @dataclass
 class CachedEditorial:
     """Cached editorial with metadata."""
-
-    problem: ProblemIdentifier
     editorial: Editorial
-    tutorial_url: str
-    tutorial_format: TutorialFormat
     cached_at: datetime = field(default_factory=datetime.now)
     ttl_hours: int = 168  # 7 days default
+    
+
 
     @property
     def is_expired(self) -> bool:
@@ -115,19 +113,14 @@ class CachedEditorial:
     def to_dict(self) -> dict:
         """Convert to dictionary for serialization."""
         return {
-            "problem": {
-                "contest_id": self.problem.contest_id,
-                "problem_id": self.problem.problem_id,
-                "is_gym": self.problem.is_gym,
-            },
+            
             "editorial": {
                 "problem_id": self.editorial.problem_id,
                 "solution_text": self.editorial.solution_text,
                 "source_url": self.editorial.source_url,
                 "extracted_at": self.editorial.extracted_at.isoformat(),
             },
-            "tutorial_url": self.tutorial_url,
-            "tutorial_format": self.tutorial_format.value,
+            
             "cached_at": self.cached_at.isoformat(),
             "ttl_hours": self.ttl_hours,
         }
@@ -135,11 +128,7 @@ class CachedEditorial:
     @classmethod
     def from_dict(cls, data: dict) -> "CachedEditorial":
         """Create from dictionary."""
-        problem = ProblemIdentifier(
-            contest_id=data["problem"]["contest_id"],
-            problem_id=data["problem"]["problem_id"],
-            is_gym=data["problem"]["is_gym"],
-        )
+        
 
         editorial = Editorial(
             problem_id=data["editorial"]["problem_id"],
@@ -149,10 +138,9 @@ class CachedEditorial:
         )
 
         return cls(
-            problem=problem,
+            
             editorial=editorial,
-            tutorial_url=data["tutorial_url"],
-            tutorial_format=TutorialFormat(data["tutorial_format"]),
+            
             cached_at=datetime.fromisoformat(data["cached_at"]),
             ttl_hours=data["ttl_hours"],
         )
