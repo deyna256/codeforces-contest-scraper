@@ -91,16 +91,8 @@ class Editorial:
 
     problem_id: str
     solution_text: str
-    approach: Optional[str] = None
-    algorithm: Optional[str] = None
-    time_complexity: Optional[str] = None
-    space_complexity: Optional[str] = None
-    code_snippets: list[CodeSnippet] = field(default_factory=list)
-    hints: list[str] = field(default_factory=list)
-    notes: Optional[str] = None
     source_url: Optional[str] = None
     extracted_at: datetime = field(default_factory=datetime.now)
-    ai_model: Optional[str] = None
 
 
 @dataclass
@@ -131,23 +123,8 @@ class CachedEditorial:
             "editorial": {
                 "problem_id": self.editorial.problem_id,
                 "solution_text": self.editorial.solution_text,
-                "approach": self.editorial.approach,
-                "algorithm": self.editorial.algorithm,
-                "time_complexity": self.editorial.time_complexity,
-                "space_complexity": self.editorial.space_complexity,
-                "code_snippets": [
-                    {
-                        "language": snippet.language,
-                        "code": snippet.code,
-                        "description": snippet.description,
-                    }
-                    for snippet in self.editorial.code_snippets
-                ],
-                "hints": self.editorial.hints,
-                "notes": self.editorial.notes,
                 "source_url": self.editorial.source_url,
                 "extracted_at": self.editorial.extracted_at.isoformat(),
-                "ai_model": self.editorial.ai_model,
             },
             "tutorial_url": self.tutorial_url,
             "tutorial_format": self.tutorial_format.value,
@@ -176,16 +153,8 @@ class CachedEditorial:
         editorial = Editorial(
             problem_id=data["editorial"]["problem_id"],
             solution_text=data["editorial"]["solution_text"],
-            approach=data["editorial"].get("approach"),
-            algorithm=data["editorial"].get("algorithm"),
-            time_complexity=data["editorial"].get("time_complexity"),
-            space_complexity=data["editorial"].get("space_complexity"),
-            code_snippets=code_snippets,
-            hints=data["editorial"].get("hints", []),
-            notes=data["editorial"].get("notes"),
             source_url=data["editorial"].get("source_url"),
             extracted_at=datetime.fromisoformat(data["editorial"]["extracted_at"]),
-            ai_model=data["editorial"].get("ai_model"),
         )
 
         return cls(

@@ -113,22 +113,11 @@ class EditorialExtractor:
             # No metadata separator, use full response
             solution_text = response.strip()
 
-        # Extract code snippets for convenience (but keep them in original text)
-        code_snippets = self._extract_code_snippets(solution_text)
-
         return Editorial(
             problem_id=identifier.problem_id,
             solution_text=solution_text,  # Original editorial text
-            approach=None,
-            algorithm=None,
-            time_complexity=None,
-            space_complexity=None,
-            code_snippets=code_snippets,
-            hints=[],
-            notes=None,
             source_url=source_url,
             extracted_at=datetime.now(),
-            ai_model=self.ai_client.model,
         )
 
     def _extract_section(self, text: str, headers: list[str]) -> Optional[str]:
@@ -158,89 +147,7 @@ class EditorialExtractor:
                         return content
 
         return None
-
-    def _extract_complexity(self, text: str, complexity_type: str) -> Optional[str]:
-        """
-        Extract time or space complexity.
-
-        Args:
-            text: Full text
-            complexity_type: "Time" or "Space"
-
-        Returns:
-            Complexity string if found
-        """
-        # Look for "Time Complexity: O(...)" patterns
-        patterns = [
-            rf"{complexity_type}\s+Complexity\s*:?\s*(O\([^)]+\))",
-            rf"{complexity_type}\s*:?\s*(O\([^)]+\))",
-        ]
-
-        for pattern in patterns:
-            match = re.search(pattern, text, re.IGNORECASE)
-            if match:
-                return match.group(1).strip()
-
-        return None
-
-    def _extract_code_snippets(self, text: str) -> list[CodeSnippet]:
-        """
-        Extract code snippets from text.
-
-        Args:
-            text: Full text
-
-        Returns:
-            List of code snippets
-        """
-        snippets = []
-
-        # Find code blocks (markdown style)
-        code_block_pattern = r"```(\w+)?\n(.*?)```"
-        matches = re.finditer(code_block_pattern, text, re.DOTALL)
-
-        for match in matches:
-            language = match.group(1) or "text"
-            code = match.group(2).strip()
-
-            if code:
-                snippets.append(
-                    CodeSnippet(
-                        language=language,
-                        code=code,
-                    )
-                )
-
-        return snippets
-
-    def _extract_hints(self, text: str) -> list[str]:
-        """
-        Extract hints from text.
-
-        Args:
-            text: Full text
-
-        Returns:
-            List of hints
-        """
-        hints = []
-
-        # Look for hints section
-        hints_section = self._extract_section(text, ["Hints", "Progressive Hints"])
-
-        if hints_section:
-            # Try to parse numbered or bulleted hints
-            lines = hints_section.split("\n")
-            for line in lines:
-                line = line.strip()
-                # Remove numbering/bullets
-                hint = re.sub(r"^[\d\-\*\.]+\s*", "", line)
-                if hint:
-                    hints.append(hint)
-
-        return hints
-
-
+        
 async def extract_editorial(
     tutorial: TutorialData,
     identifier: ProblemIdentifier,

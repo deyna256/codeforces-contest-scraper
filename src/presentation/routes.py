@@ -93,16 +93,8 @@ class EditorialController(Controller):
         editorial_schema = EditorialSchema(
             problem_id=editorial.problem_id,
             solution_text=editorial.solution_text,
-            approach=editorial.approach,
-            algorithm=editorial.algorithm,
-            time_complexity=editorial.time_complexity,
-            space_complexity=editorial.space_complexity,
-            code_snippets=code_snippets_schema,
-            hints=editorial.hints or [],
-            notes=editorial.notes,
             source_url=editorial.source_url,
             extracted_at=editorial.extracted_at,
-            ai_model=editorial.ai_model,
         )
 
         response = EditorialResponse(

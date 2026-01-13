@@ -22,31 +22,13 @@ class EditorialRequest(BaseModel):
         return v
 
 
-class CodeSnippetSchema(BaseModel):
-    """Schema for code snippet."""
-
-    language: str = Field(..., description="Programming language")
-    code: str = Field(..., description="Code content")
-    description: Optional[str] = Field(None, description="Code description")
-
-
 class EditorialSchema(BaseModel):
     """Schema for editorial data."""
 
     problem_id: str = Field(..., description="Problem ID")
     solution_text: str = Field(..., description="Full solution text (original editorial)")
-    approach: Optional[str] = Field(None, description="Solution approach")
-    algorithm: Optional[str] = Field(None, description="Algorithm used")
-    time_complexity: Optional[str] = Field(None, description="Time complexity")
-    space_complexity: Optional[str] = Field(None, description="Space complexity")
-    code_snippets: list[CodeSnippetSchema] = Field(
-        default_factory=list, description="Code examples"
-    )
-    hints: list[str] = Field(default_factory=list, description="Progressive hints")
-    notes: Optional[str] = Field(None, description="Additional notes")
     source_url: Optional[str] = Field(None, description="Editorial source URL")
     extracted_at: datetime = Field(..., description="When editorial was extracted")
-    ai_model: Optional[str] = Field(None, description="AI model used for extraction")
 
 
 class ProblemSchema(BaseModel):
