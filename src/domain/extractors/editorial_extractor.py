@@ -8,7 +8,6 @@ from loguru import logger
 
 from domain.models import (
     Editorial,
-    CodeSnippet,
     ProblemIdentifier,
     TutorialData,
 )
@@ -147,7 +146,7 @@ class EditorialExtractor:
                         return content
 
         return None
-        
+
 async def extract_editorial(
     tutorial: TutorialData,
     identifier: ProblemIdentifier,

@@ -141,15 +141,6 @@ class CachedEditorial:
             is_gym=data["problem"]["is_gym"],
         )
 
-        code_snippets = [
-            CodeSnippet(
-                language=snippet["language"],
-                code=snippet["code"],
-                description=snippet.get("description"),
-            )
-            for snippet in data["editorial"].get("code_snippets", [])
-        ]
-
         editorial = Editorial(
             problem_id=data["editorial"]["problem_id"],
             solution_text=data["editorial"]["solution_text"],

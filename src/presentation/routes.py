@@ -81,15 +81,6 @@ class EditorialController(Controller):
             memory_limit=problem_data.memory_limit,
         )
 
-        code_snippets_schema = [
-            CodeSnippetSchema(
-                language=snippet.language,
-                code=snippet.code,
-                description=snippet.description,
-            )
-            for snippet in editorial.code_snippets
-        ]
-
         editorial_schema = EditorialSchema(
             problem_id=editorial.problem_id,
             solution_text=editorial.solution_text,
