@@ -1,5 +1,5 @@
 import pytest
-from datetime import datetime
+
 
 from domain.models import ProblemIdentifier, TutorialData
 from domain.exceptions import ExtractionError
