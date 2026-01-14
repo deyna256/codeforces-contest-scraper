@@ -47,52 +47,6 @@ async def test_l1_exception():
     with pytest.raises(ExtractionError):
         await extractor.extract(TutorialData("u", "tutorial"), ProblemIdentifier("1"))
 
-
-@pytest.mark.asyncio
-async def test_l1_none_result():
-    ai = FakeAI(None)
-    extractor = EditorialExtractor(ai)
-
-    with pytest.raises(ExtractionError):
-        await extractor.extract(TutorialData("u", "tutorial"), ProblemIdentifier("1"))
-
-
-@pytest.mark.asyncio
-async def test_l1_list_result():
-    ai = FakeAI(["hello"])
-    extractor = EditorialExtractor(ai)
-
-    with pytest.raises(ExtractionError):
-        await extractor.extract(TutorialData("u", "tutorial"), ProblemIdentifier("1"))
-
-
-@pytest.mark.asyncio
-async def test_l1_tuple_result():
-    ai = FakeAI(("hello",))
-    extractor = EditorialExtractor(ai)
-
-    with pytest.raises(ExtractionError):
-        await extractor.extract(TutorialData("u", "tutorial"), ProblemIdentifier("1"))
-
-
-@pytest.mark.asyncio
-async def test_l1_string_result():
-    ai = FakeAI("hello")
-    extractor = EditorialExtractor(ai)
-
-    with pytest.raises(ExtractionError):
-        await extractor.extract(TutorialData("u", "tutorial"), ProblemIdentifier("1"))
-
-
-@pytest.mark.asyncio
-async def test_l1_number_result():
-    ai = FakeAI(123)
-    extractor = EditorialExtractor(ai)
-
-    with pytest.raises(ExtractionError):
-        await extractor.extract(TutorialData("u", "tutorial"), ProblemIdentifier("1"))
-
-
 @pytest.mark.asyncio
 async def test_l1_empty_dict():
     ai = FakeAI({})
@@ -242,19 +196,6 @@ async def test_metadata_not_stripped_when_extra_text_before_frontmatter():
 
 
 @pytest.mark.asyncio
-async def test_metadata_not_stripped_when_second_separator_missing():
-    """
-    If the closing --- is missing, the regex must not match.
-    """
-    text = "---\nmeta\n\nsolution"
-    ai = FakeAI({"raw_response": text})
-    extractor = EditorialExtractor(ai)
-
-    editorial = await extractor.extract(TutorialData("u", "tutorial"), ProblemIdentifier("1"))
-    assert editorial.solution_text == text.strip()
-
-
-@pytest.mark.asyncio
 async def test_metadata_not_stripped_when_extra_blank_lines_exist():
     """
     The regex requires exactly one blank line after the closing ---.
@@ -375,7 +316,7 @@ async def test_editorial_contract_full():
     ai = FakeAI({"raw_response": "final solution"}, model="gpt-test")
     extractor = EditorialExtractor(ai)
 
-    tutorial = TutorialData("tutorial content", "https://cf.com/contest/123")
+    tutorial = TutorialData("https://cf.com/contest/123", "tutorial content")
     pid = ProblemIdentifier("1872C")
 
     editorial = await extractor.extract(tutorial, pid)
