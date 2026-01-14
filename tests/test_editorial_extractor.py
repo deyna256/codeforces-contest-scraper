@@ -35,7 +35,7 @@ async def test_l1_valid_response():
     ai = FakeAI({"raw_response": "solution"})
     extractor = EditorialExtractor(ai)
 
-    editorial = await extractor.extract(TutorialData("x", "u"), ProblemIdentifier("1"))
+    editorial = await extractor.extract(TutorialData("u", "tutorial"), ProblemIdentifier("1"))
     assert editorial.solution_text == "solution"
 
 
@@ -45,7 +45,7 @@ async def test_l1_exception():
     extractor = EditorialExtractor(ai)
 
     with pytest.raises(ExtractionError):
-        await extractor.extract(TutorialData("x", "u"), ProblemIdentifier("1"))
+        await extractor.extract(TutorialData("u", "tutorial"), ProblemIdentifier("1"))
 
 
 @pytest.mark.asyncio
@@ -54,7 +54,7 @@ async def test_l1_none_result():
     extractor = EditorialExtractor(ai)
 
     with pytest.raises(ExtractionError):
-        await extractor.extract(TutorialData("x", "u"), ProblemIdentifier("1"))
+        await extractor.extract(TutorialData("u", "tutorial"), ProblemIdentifier("1"))
 
 
 @pytest.mark.asyncio
@@ -63,7 +63,7 @@ async def test_l1_list_result():
     extractor = EditorialExtractor(ai)
 
     with pytest.raises(ExtractionError):
-        await extractor.extract(TutorialData("x", "u"), ProblemIdentifier("1"))
+        await extractor.extract(TutorialData("u", "tutorial"), ProblemIdentifier("1"))
 
 
 @pytest.mark.asyncio
@@ -72,7 +72,7 @@ async def test_l1_tuple_result():
     extractor = EditorialExtractor(ai)
 
     with pytest.raises(ExtractionError):
-        await extractor.extract(TutorialData("x", "u"), ProblemIdentifier("1"))
+        await extractor.extract(TutorialData("u", "tutorial"), ProblemIdentifier("1"))
 
 
 @pytest.mark.asyncio
@@ -81,7 +81,7 @@ async def test_l1_string_result():
     extractor = EditorialExtractor(ai)
 
     with pytest.raises(ExtractionError):
-        await extractor.extract(TutorialData("x", "u"), ProblemIdentifier("1"))
+        await extractor.extract(TutorialData("u", "tutorial"), ProblemIdentifier("1"))
 
 
 @pytest.mark.asyncio
@@ -90,7 +90,7 @@ async def test_l1_number_result():
     extractor = EditorialExtractor(ai)
 
     with pytest.raises(ExtractionError):
-        await extractor.extract(TutorialData("x", "u"), ProblemIdentifier("1"))
+        await extractor.extract(TutorialData("u", "tutorial"), ProblemIdentifier("1"))
 
 
 @pytest.mark.asyncio
@@ -99,7 +99,7 @@ async def test_l1_empty_dict():
     extractor = EditorialExtractor(ai)
 
     with pytest.raises(ExtractionError):
-        await extractor.extract(TutorialData("x", "u"), ProblemIdentifier("1"))
+        await extractor.extract(TutorialData("u", "tutorial"), ProblemIdentifier("1"))
 
 
 @pytest.mark.asyncio
@@ -108,7 +108,7 @@ async def test_l1_missing_raw_response():
     extractor = EditorialExtractor(ai)
 
     with pytest.raises(ExtractionError):
-        await extractor.extract(TutorialData("x", "u"), ProblemIdentifier("1"))
+        await extractor.extract(TutorialData("u", "tutorial"), ProblemIdentifier("1"))
 
 
 @pytest.mark.asyncio
@@ -117,7 +117,7 @@ async def test_l1_raw_response_none():
     extractor = EditorialExtractor(ai)
 
     with pytest.raises(ExtractionError):
-        await extractor.extract(TutorialData("x", "u"), ProblemIdentifier("1"))
+        await extractor.extract(TutorialData("u", "tutorial"), ProblemIdentifier("1"))
 
 
 @pytest.mark.asyncio
@@ -126,7 +126,7 @@ async def test_l1_raw_response_number():
     extractor = EditorialExtractor(ai)
 
     with pytest.raises(ExtractionError):
-        await extractor.extract(TutorialData("x", "u"), ProblemIdentifier("1"))
+        await extractor.extract(TutorialData("u", "tutorial"), ProblemIdentifier("1"))
 
 
 @pytest.mark.asyncio
@@ -135,7 +135,7 @@ async def test_l1_raw_response_list():
     extractor = EditorialExtractor(ai)
 
     with pytest.raises(ExtractionError):
-        await extractor.extract(TutorialData("x", "u"), ProblemIdentifier("1"))
+        await extractor.extract(TutorialData("u", "tutorial"), ProblemIdentifier("1"))
 
 
 @pytest.mark.asyncio
@@ -144,7 +144,7 @@ async def test_l1_raw_response_dict():
     extractor = EditorialExtractor(ai)
 
     with pytest.raises(ExtractionError):
-        await extractor.extract(TutorialData("x", "u"), ProblemIdentifier("1"))
+        await extractor.extract(TutorialData("u", "tutorial"), ProblemIdentifier("1"))
 
 
 @pytest.mark.asyncio
@@ -152,7 +152,7 @@ async def test_l1_empty_string_allowed():
     ai = FakeAI({"raw_response": ""})
     extractor = EditorialExtractor(ai)
 
-    editorial = await extractor.extract(TutorialData("x", "u"), ProblemIdentifier("1"))
+    editorial = await extractor.extract(TutorialData("u", "tutorial"), ProblemIdentifier("1"))
     assert editorial.solution_text == ""
 
 
@@ -173,7 +173,7 @@ async def test_l2_not_found_blocks(text):
     extractor = EditorialExtractor(ai)
 
     with pytest.raises(ExtractionError):
-        await extractor.extract(TutorialData("x", "u"), ProblemIdentifier("1"))
+        await extractor.extract(TutorialData("u", "tutorial"), ProblemIdentifier("1"))
 
 
 @pytest.mark.asyncio
@@ -188,7 +188,7 @@ async def test_l2_not_found_not_blocked(text):
     ai = FakeAI({"raw_response": text})
     extractor = EditorialExtractor(ai)
 
-    editorial = await extractor.extract(TutorialData("x", "u"), ProblemIdentifier("1"))
+    editorial = await extractor.extract(TutorialData("u", "tutorial"), ProblemIdentifier("1"))
     assert editorial.solution_text == text.strip()
 
 # ============================================================
@@ -209,7 +209,7 @@ async def test_metadata_stripped_only_when_protocol_matches():
     ai = FakeAI({"raw_response": text})
     extractor = EditorialExtractor(ai)
 
-    editorial = await extractor.extract(TutorialData("x", "u"), ProblemIdentifier("1"))
+    editorial = await extractor.extract(TutorialData("u", "tutorial"), ProblemIdentifier("1"))
     assert editorial.solution_text == "solution"
 
 
@@ -223,7 +223,7 @@ async def test_metadata_not_stripped_when_blank_line_missing():
     ai = FakeAI({"raw_response": text})
     extractor = EditorialExtractor(ai)
 
-    editorial = await extractor.extract(TutorialData("x", "u"), ProblemIdentifier("1"))
+    editorial = await extractor.extract(TutorialData("u", "tutorial"), ProblemIdentifier("1"))
     assert editorial.solution_text == text.strip()
 
 
@@ -237,7 +237,7 @@ async def test_metadata_not_stripped_when_extra_text_before_frontmatter():
     ai = FakeAI({"raw_response": text})
     extractor = EditorialExtractor(ai)
 
-    editorial = await extractor.extract(TutorialData("x", "u"), ProblemIdentifier("1"))
+    editorial = await extractor.extract(TutorialData("u", "tutorial"), ProblemIdentifier("1"))
     assert editorial.solution_text == text.strip()
 
 
@@ -250,7 +250,7 @@ async def test_metadata_not_stripped_when_second_separator_missing():
     ai = FakeAI({"raw_response": text})
     extractor = EditorialExtractor(ai)
 
-    editorial = await extractor.extract(TutorialData("x", "u"), ProblemIdentifier("1"))
+    editorial = await extractor.extract(TutorialData("u", "tutorial"), ProblemIdentifier("1"))
     assert editorial.solution_text == text.strip()
 
 
@@ -264,7 +264,7 @@ async def test_metadata_not_stripped_when_extra_blank_lines_exist():
     ai = FakeAI({"raw_response": text})
     extractor = EditorialExtractor(ai)
 
-    editorial = await extractor.extract(TutorialData("x", "u"), ProblemIdentifier("1"))
+    editorial = await extractor.extract(TutorialData("u", "tutorial"), ProblemIdentifier("1"))
     assert editorial.solution_text == text.strip()
 
 
@@ -279,7 +279,7 @@ async def test_single_code_block_extracted():
     ai = FakeAI({"raw_response": text})
     extractor = EditorialExtractor(ai)
 
-    editorial = await extractor.extract(TutorialData("x", "u"), ProblemIdentifier("1"))
+    editorial = await extractor.extract(TutorialData("u", "tutorial"), ProblemIdentifier("1"))
 
     assert len(editorial.code_snippets) == 1
     assert editorial.code_snippets[0].language == "python"
@@ -295,7 +295,7 @@ async def test_multiple_code_blocks_extracted():
     ai = FakeAI({"raw_response": text})
     extractor = EditorialExtractor(ai)
 
-    editorial = await extractor.extract(TutorialData("x", "u"), ProblemIdentifier("1"))
+    editorial = await extractor.extract(TutorialData("u", "tutorial"), ProblemIdentifier("1"))
 
     assert len(editorial.code_snippets) == 2
     assert editorial.code_snippets[0].language == "python"
@@ -312,7 +312,7 @@ async def test_code_block_without_language_defaults_to_text():
     ai = FakeAI({"raw_response": text})
     extractor = EditorialExtractor(ai)
 
-    editorial = await extractor.extract(TutorialData("x", "u"), ProblemIdentifier("1"))
+    editorial = await extractor.extract(TutorialData("u", "tutorial"), ProblemIdentifier("1"))
 
     assert len(editorial.code_snippets) == 1
     assert editorial.code_snippets[0].language == "text"
@@ -328,7 +328,7 @@ async def test_broken_code_block_is_ignored():
     ai = FakeAI({"raw_response": text})
     extractor = EditorialExtractor(ai)
 
-    editorial = await extractor.extract(TutorialData("x", "u"), ProblemIdentifier("1"))
+    editorial = await extractor.extract(TutorialData("u", "tutorial"), ProblemIdentifier("1"))
 
     assert editorial.code_snippets == []
 
@@ -342,7 +342,7 @@ async def test_code_block_with_empty_body_is_ignored():
     ai = FakeAI({"raw_response": text})
     extractor = EditorialExtractor(ai)
 
-    editorial = await extractor.extract(TutorialData("x", "u"), ProblemIdentifier("1"))
+    editorial = await extractor.extract(TutorialData("u", "tutorial"), ProblemIdentifier("1"))
 
     assert editorial.code_snippets == []
 
@@ -356,7 +356,7 @@ async def test_text_around_code_is_preserved():
     ai = FakeAI({"raw_response": text})
     extractor = EditorialExtractor(ai)
 
-    editorial = await extractor.extract(TutorialData("x", "u"), ProblemIdentifier("1"))
+    editorial = await extractor.extract(TutorialData("u", "tutorial"), ProblemIdentifier("1"))
 
     assert editorial.solution_text == text.strip()
 
@@ -414,5 +414,5 @@ async def test_missing_model_attribute_fails():
     extractor = EditorialExtractor(FakeAIMissingModel())
 
     with pytest.raises(ExtractionError):
-        await extractor.extract(TutorialData("x", "u"), ProblemIdentifier("1"))
+        await extractor.extract(TutorialData("u", "tutorial"), ProblemIdentifier("1"))
 
