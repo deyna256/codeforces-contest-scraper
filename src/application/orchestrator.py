@@ -56,31 +56,25 @@ class AsyncEditorialOrchestrator:
         Raises:
             CodeforcesEditorialError: If process fails
         """
-        logger.info(f"Getting editorial for URL: {url}")
-
         try:
-            logger.info("Step 1: Parsing URL")
             identifier = URLParser.parse(url)
+            logger.info(f"Starting editorial retrieval for problem_id={identifier.cache_key}")
+
 
             if self.use_cache and self.cache_client:
-                logger.info("Step 2: Checking cache")
                 cached = await self._get_from_cache(identifier.cache_key)
                 if cached:
-                    logger.info("Using cached editorial")
+                    logger.info(f"Editorial served from cache for problem_id={identifier.cache_key}")
                     # Fetch problem data for response
                     problem_data = await self.problem_parser.parse_problem_page(identifier)
                     return cached.editorial, problem_data
 
-            logger.info("Step 3: Parsing problem page")
             problem_data = await self.problem_parser.parse_problem_page(identifier)
 
-            logger.info("Step 4: Finding tutorial URL")
             tutorial_url = await self.tutorial_finder.find_tutorial(identifier)
 
-            logger.info("Step 5: Parsing tutorial content")
             tutorial_data = await self.tutorial_parser.parse(tutorial_url)
 
-            logger.info("Step 6: Extracting editorial")
             editorial = await self.editorial_extractor.extract(
                 tutorial_data,
                 identifier,
@@ -88,7 +82,6 @@ class AsyncEditorialOrchestrator:
             )
 
             if self.use_cache and self.cache_client:
-                logger.info("Step 7: Caching result")
                 cached_editorial = CachedEditorial(
                     problem=identifier,
                     editorial=editorial,
@@ -97,13 +90,15 @@ class AsyncEditorialOrchestrator:
                 )
                 await self._save_to_cache(identifier.cache_key, cached_editorial)
 
-            logger.info("Editorial extraction completed successfully")
+            logger.info(f"Editorial retrieval completed for problem_id={identifier.cache_key}")
+
             return editorial, problem_data
 
         except CodeforcesEditorialError:
             raise
         except Exception as e:
-            logger.error(f"Unexpected error in orchestrator: {e}")
+            logger.error(f"Unexpected error during editorial retrieval for problem_id={identifier.cache_key}: {e}")
+
             raise CodeforcesEditorialError(f"Failed to get editorial: {e}") from e
 
     async def _get_from_cache(self, cache_key: str) -> Optional[CachedEditorial]:

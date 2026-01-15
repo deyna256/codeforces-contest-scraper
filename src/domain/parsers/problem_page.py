@@ -36,7 +36,10 @@ class ProblemPageParser:
         Parse problem page and extract data.
         """
         url = URLParser.build_problem_url(identifier)
-        logger.info(f"Parsing problem page: {url}")
+        logger.debug(
+            f"Parsing problem page for problem_id={identifier.cache_key}"
+        )
+
 
         if not self.http_client:
             raise ParsingError(f"HTTP client not initialized for {url}")
@@ -60,7 +63,9 @@ class ProblemPageParser:
                 possible_editorial_links=editorial_links,
             )
 
-            logger.info(f"Successfully parsed problem: {title}")
+            logger.debug(
+                f"Successfully parsed problem page for problem_id={identifier.cache_key}"
+            )
             return problem_data
 
         except Exception as e:
