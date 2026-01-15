@@ -78,16 +78,16 @@ class OpenAIClient:
             logger.error(f"Unexpected error calling OpenAI API: {e}")
             raise OpenAIAPIError(f"Failed to call OpenAI API: {e}") from e
 
-    def find_editorial_link(self, contest_html: str, problem_id: str) -> Optional[str]:
+    def find_editorial_link(self, contest_html: str, problem: str) -> Optional[str]:
         """
         Use OpenAI to extract an editorial URL for a problem from contest page HTML.
         Returns None if no valid link is found.
         """
         from domain.openai.prompts import get_find_editorial_prompt
 
-        logger.info(f"Using OpenAI to find editorial link for problem {problem_id}")
+        logger.info(f"Using OpenAI to find editorial link for problem {problem}")
 
-        prompt = get_find_editorial_prompt(contest_html, problem_id)
+        prompt = get_find_editorial_prompt(contest_html, problem)
 
         try:
             response = self.send_message(
@@ -117,7 +117,7 @@ class OpenAIClient:
     def extract_solution(
         self,
         tutorial_content: str,
-        problem_id: str,
+        problem: str,
         problem_title: str = "",
     ) -> dict:
         """
@@ -126,12 +126,12 @@ class OpenAIClient:
         from domain.openai.prompts import get_extract_solution_prompt
         from domain.models import ProblemIdentifier
 
-        logger.info(f"Using OpenAI to extract solution for problem {problem_id}")
+        logger.info(f"Using OpenAI to extract solution for problem {problem}")
 
         # Create a minimal identifier for the prompt
         contest_id = "unknown"
-        pid = problem_id
-        identifier = ProblemIdentifier(contest_id=contest_id, problem_id=pid)
+        pid = problem
+        identifier = ProblemIdentifier(contest_id=contest_id, problem=pid)
 
         prompt = get_extract_solution_prompt(tutorial_content, identifier, problem_title)
 
@@ -148,7 +148,7 @@ class OpenAIClient:
 
             return {
                 "raw_response": response,
-                "problem_id": problem_id,
+                "problem": problem,
             }
 
         except OpenAIAPIError:
@@ -160,7 +160,7 @@ class OpenAIClient:
     def validate_editorial_content(
         self,
         content: str,
-        problem_id: str,
+        problem: str,
     ) -> bool:
         """
         Use OpenAI to check whether content contains an editorial for the given problem.
@@ -168,9 +168,9 @@ class OpenAIClient:
         """
         from domain.openai.prompts import get_validate_editorial_prompt
 
-        logger.debug(f"Validating editorial content for problem {problem_id}")
+        logger.debug(f"Validating editorial content for problem {problem}")
 
-        prompt = get_validate_editorial_prompt(content, problem_id)
+        prompt = get_validate_editorial_prompt(content, problem)
 
         try:
             response = self.send_message(

@@ -15,7 +15,7 @@ REALISTIC_HTML = """
         <a href="/contest/2183">Hello 2026</a>
     </div>
     <div class="header">
-        <div class="title">A. Real Problem Title</div>
+        <div class="title">A. Real Problem title</div>
     </div>
 
     <div class="roundbox sidebox sidebar-menu borderTopRound " style="">
@@ -65,7 +65,7 @@ def mock_http_client() -> AsyncMock:
 async def test_parse_successful(mock_http_client) -> None:
     """Test standard parsing with editorial links present."""
 
-    identifier = ProblemIdentifier(contest_id="2183", problem_id="A")
+    identifier = ProblemIdentifier(contest_id=2183, problem_id="A")
 
     parser = ProblemPageParser(mock_http_client)
     data = await parser.parse_problem_page(identifier=identifier)
@@ -76,7 +76,7 @@ async def test_parse_successful(mock_http_client) -> None:
         "https://codeforces.com/blog/entry/149944",
     ]
 
-    assert data.title == "Real Problem Title"
+    assert data.title == "Real Problem title"
     assert data.contest_name == "Hello 2026"
     assert len(data.possible_editorial_links) == 3
     for link in expected_links:
@@ -89,7 +89,7 @@ async def test_parse_no_editorial() -> None:
 
     client = AsyncMock()
     client.get_text.return_value = SAMPLE_HTML_NO_EDITORIAL
-    identifier = ProblemIdentifier(contest_id="9999", problem_id="B")
+    identifier = ProblemIdentifier(contest_id=9999, problem_id="B")
 
     parser = ProblemPageParser(client)
     data = await parser.parse_problem_page(identifier=identifier)
@@ -104,7 +104,7 @@ async def test_http_error_handling() -> None:
 
     client = AsyncMock()
     client.get_text.side_effect = Exception("Network Error")
-    identifier = ProblemIdentifier(contest_id="1234", problem_id="A")
+    identifier = ProblemIdentifier(contest_id=1234, problem_id="A")
 
     with pytest.raises(ParsingError):
         parser = ProblemPageParser(client)
@@ -116,5 +116,5 @@ async def test_convenience_function(mock_http_client) -> None:
     url = "https://codeforces.com/problemset/problem/2183/A"
     data = await parse_problem(url=url, http_client=mock_http_client)
 
-    assert data.identifier.contest_id == "2183"
-    assert data.title == "Real Problem Title"
+    assert data.identifier.contest_id == 2183
+    assert data.title == "Real Problem title"

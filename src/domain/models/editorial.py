@@ -1,62 +1,57 @@
-from dataclasses import dataclass, field
-from datetime import datetime
-from enum import Enum
-from typing import Optional
-
-
-class TutorialFormat(str, Enum):
-    HTML = "html"
-    PDF = "pdf"
-    UNKNOWN = "unknown"
-
-
-class Language(str, Enum):
-    ENGLISH = "en"
-    RUSSIAN = "ru"
-    AUTO = "auto"
-
-
-@dataclass
-class TutorialData:
-    url: str
-    format: TutorialFormat
-    content: str
-    language: Language = Language.AUTO
-    title: Optional[str] = None
-    author: Optional[str] = None
-    raw_bytes: Optional[bytes] = None
-
+from __future__ import annotations
+from dataclasses import dataclass
+from typing import List, Any
+from .problem import ProblemIdentifier
 
 @dataclass
 class CodeSnippet:
     language: str
     code: str
-    description: Optional[str] = None
+    description: str = ""
 
+@dataclass
+class TutorialData:
+    language: str
+    content: str
 
 @dataclass
 class Editorial:
-    problem_id: str
+    problem: ProblemIdentifier
     solution_text: str
-    approach: Optional[str] = None
-    algorithm: Optional[str] = None
-    time_complexity: Optional[str] = None
-    space_complexity: Optional[str] = None
-    code_snippets: list[CodeSnippet] = field(default_factory=list)
-    hints: list[str] = field(default_factory=list)
-    notes: Optional[str] = None
-    source_url: Optional[str] = None
-    extracted_at: datetime = field(default_factory=datetime.now)
-    ai_model: Optional[str] = None
+    approach: str
+    algorithm: str
+    time_complexity: str
+    space_complexity: str
+    code_snippets: List[CodeSnippet]
+    hints: List[str]
+    notes: List[str]
+    source_url: str
 
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "problem": self.problem.full_id,
+            "solution_text": self.solution_text,
+            "approach": self.approach,
+            "algorithm": self.algorithm,
+            "time_complexity": self.time_complexity,
+            "space_complexity": self.space_complexity,
+            "code_snippets": [s.__dict__ for s in self.code_snippets],
+            "hints": self.hints,
+            "notes": self.notes,
+            "source_url": self.source_url,
+        }
 
-@dataclass
-class CachedEditorial:
-    editorial: Editorial
-    cached_at: datetime = field(default_factory=datetime.now)
-    ttl_hours: int = 168
-
-    @property
-    def is_expired(self) -> bool:
-        age_hours = (datetime.now() - self.cached_at).total_seconds() / 3600
-        return age_hours > self.ttl_hours
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> Editorial:
+        return cls(
+            problem=data["problem"],
+            solution_text=data.get("solution_text", ""),
+            approach=data.get("approach", ""),
+            algorithm=data.get("algorithm", ""),
+            time_complexity=data.get("time_complexity", ""),
+            space_complexity=data.get("space_complexity", ""),
+            code_snippets=[CodeSnippet(**s) for s in data.get("code_snippets", [])],
+            hints=data.get("hints", []),
+            notes=data.get("notes", []),
+            source_url=data.get("source_url", ""),
+        )

@@ -1,6 +1,6 @@
 """Async orchestrator for coordinating the editorial extraction process."""
 
-from typing import Optional
+from typing import Optional, Tuple
 import json
 
 from loguru import logger
@@ -28,9 +28,9 @@ class AsyncEditorialOrchestrator:
         Initialize async orchestrator with dependency injection.
 
         Args:
-            http_client: Async HTTP client (AsyncHTTPClient)
-            ai_client: Async OpenAI client (AsyncOpenAIClient)
-            cache_client: Optional async cache client (Redis)
+            http_client: Async HTTP client
+            ai_client: Async OpenAI client
+            cache_client: Optional async cache client
             use_cache: Whether to use caching
         """
         self.http_client = http_client
@@ -44,7 +44,7 @@ class AsyncEditorialOrchestrator:
         self.tutorial_finder = TutorialFinder(self.ai_client, self.http_client)
         self.editorial_extractor = EditorialExtractor(self.ai_client)
 
-    async def get_editorial(self, url: str) -> tuple[Editorial, ProblemData]:
+    async def get_editorial(self, url: str) -> Tuple[Editorial, ProblemData]:
         """
         Get editorial for problem URL.
 
@@ -63,7 +63,7 @@ class AsyncEditorialOrchestrator:
             logger.info("Step 1: Parsing URL")
             identifier = URLParser.parse(url)
 
-            cache_key = f"editorial:{identifier.contest_id}:{identifier.problem_id}"
+            cache_key = f"editorial:{identifier.contest_id}:{identifier.problem}"
 
             if self.use_cache and self.cache_client:
                 logger.info("Step 2: Checking cache")

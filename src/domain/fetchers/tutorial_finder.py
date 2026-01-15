@@ -53,7 +53,7 @@ class TutorialFinder:
             html = await self.http.get_text(contest_url)
 
             # Use OpenAI to find editorial link
-            editorial_url = await self.ai_client.find_editorial_link(html, identifier.problem_id)
+            editorial_url = await self.ai_client.find_editorial_link(html, identifier.problem)
 
             if editorial_url:
                 # Normalize URL
@@ -99,7 +99,7 @@ class TutorialFinder:
                         blog_html = await self.http.get_text(blog_url)
 
                         # Simple validation: check if problem ID appears in blog
-                        if identifier.problem_id in blog_html or identifier.full_id in blog_html:
+                        if identifier.problem in blog_html or identifier.full_id in blog_html:
                             logger.info(f"Found editorial via blog search: {blog_url}")
                             return blog_url
                     except Exception as e:

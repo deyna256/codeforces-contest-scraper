@@ -25,7 +25,7 @@ class EditorialRequest(BaseModel):
 class EditorialSchema(BaseModel):
     """Schema for editorial data."""
 
-    problem_id: str = Field(..., description="Problem ID")
+    problem: str = Field(..., description="Problem ID")
     solution_text: str = Field(..., description="Full solution text (original editorial)")
     source_url: Optional[str] = Field(None, description="Editorial source URL")
     extracted_at: datetime = Field(..., description="When editorial was extracted")
@@ -35,7 +35,7 @@ class ProblemSchema(BaseModel):
     """Schema for problem metadata."""
 
     contest_id: str = Field(..., description="Contest ID")
-    problem_id: str = Field(..., description="Problem ID (letter)")
+    problem: str = Field(..., description="Problem ID (letter)")
     title: str = Field(..., description="Problem title")
     url: str = Field(..., description="Problem URL")
     contest_name: Optional[str] = Field(None, description="Contest name")

@@ -18,9 +18,9 @@ class MarkdownFormatter:
 
         # Metadata header
         lines.append("---")
-        lines.append(f"Problem: {problem.identifier.problem_id}")
+        lines.append(f"Problem: {problem.identifier.problem}")
         lines.append(f"Contest: {problem.identifier.contest_id}")
-        lines.append(f"Title: {problem.title}")
+        lines.append(f"title: {problem.title}")
         lines.append(f"Link: {problem.url}")
         if editorial.source_url:
             lines.append(f"Editorial: {editorial.source_url}")

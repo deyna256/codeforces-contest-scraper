@@ -7,6 +7,7 @@ from tenacity import retry, stop_after_attempt, wait_exponential
 
 from config import get_settings
 from domain.exceptions import OpenAIAPIError
+from domain.models import ProblemIdentifier
 
 
 class AsyncOpenAIClient:
@@ -139,14 +140,12 @@ class AsyncOpenAIClient:
         Use OpenAI to extract and structure a problem solution from tutorial content.
         """
         from domain.openai.prompts import get_extract_solution_prompt
-        from domain.models import ProblemIdentifier
 
         logger.info(f"Using OpenAI to extract solution for problem {problem_id}")
 
         # Create a minimal identifier for the prompt
         contest_id = "unknown"
-        pid = problem_id
-        identifier = ProblemIdentifier(contest_id=contest_id, problem_id=pid)
+        identifier = ProblemIdentifier(contest_id=contest_id, problem=problem_id)
 
         prompt = get_extract_solution_prompt(tutorial_content, identifier, problem_title)
 
@@ -162,7 +161,7 @@ class AsyncOpenAIClient:
 
             return {
                 "raw_response": response,
-                "problem_id": problem_id,
+                "problem": problem_id,
             }
 
         except OpenAIAPIError:

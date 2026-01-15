@@ -5,7 +5,7 @@ from domain.models.problem import ProblemIdentifier, ProblemData
 from domain.models.editorial import Editorial, CodeSnippet, CachedEditorial
 
 # --- Test ProblemIdentifier ---
-pid = ProblemIdentifier(contest_id="123", problem_id="A", is_gym=False)
+pid = ProblemIdentifier(contest_id=123, problem="A", is_gym=False)
 print("ProblemIdentifier test:", pid)
 
 # --- Test ProblemData ---
@@ -24,7 +24,7 @@ print("CodeSnippet test:", snippet)
 
 # --- Test Editorial ---
 e = Editorial(
-    problem_id="123A",
+    problem="123A",
     solution_text="This is the solution text for Two Sum",
     approach="Use a hashmap to store visited numbers",
     algorithm="Single pass hashmap",

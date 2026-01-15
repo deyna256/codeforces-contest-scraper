@@ -1,16 +1,12 @@
-# src/domain/models/__init__.py
-
-# Import problem-related models
 from .problem import ProblemIdentifier, ProblemData
+from .editorial import Editorial, TutorialData, CodeSnippet
+from .cached_editorial import CachedEditorial
 
-# Import editorial-related models
-from .editorial import TutorialData, Editorial, CachedEditorial
-
-# Explicitly declare exports (optional but good practice)
 __all__ = [
     "ProblemIdentifier",
     "ProblemData",
     "TutorialData",
+    "CodeSnippet",
     "Editorial",
-    "CachedEditorial"
+    "CachedEditorial",
 ]

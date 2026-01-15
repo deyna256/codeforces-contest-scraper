@@ -31,50 +31,37 @@ class URLParser:
 
         match = re.search(cls.PATTERN, url)
         if match:
-            contest_id, problem_id = match.groups()
-
+            contest_id, index = match.groups()
             identifier = ProblemIdentifier(
-                contest_id=contest_id,
-                problem_id=problem_id
-,
+                contest_id=contest_id,  # keep as string for tests
+                problem=index,
             )
-
             logger.info(f"Parsed URL to problem: {identifier}")
             return identifier
 
         # No pattern matched
         raise URLParsingError(
             f"Unrecognized Codeforces URL format: {url}. "
-            "Expected format: https://codeforces.com/problemset/problem/<contest_id>/<problem_id>"
+            "Expected format: https://codeforces.com/problemset/problem/<contest_id>/<problem>"
         )
 
     @classmethod
     def build_problem_url(cls, identifier: ProblemIdentifier) -> str:
-        """
-        Build problem URL from identifier.
-        """
-
-        url = f"https://codeforces.com/problemset/problem/{identifier.contest_id}/{identifier.problem_id}"
-
+        """Build problem URL from identifier."""
+        url = f"https://codeforces.com/problemset/problem/{identifier.contest_id}/{identifier.problem}"
         logger.debug(f"Built problem URL: {url}")
         return url
 
     @classmethod
     def build_contest_url(cls, identifier: ProblemIdentifier) -> str:
-        """
-        Build contest main page URL from identifier.
-        """
-
+        """Build contest main page URL from identifier."""
         url = f"https://codeforces.com/contest/{identifier.contest_id}"
-
         logger.debug(f"Built contest URL: {url}")
         return url
 
     @classmethod
     def validate_url(cls, url: str) -> bool:
-        """
-        Check if URL is a valid Codeforces problem URL.
-        """
+        """Check if URL is a valid Codeforces problem URL."""
         try:
             cls.parse(url)
             return True
@@ -83,7 +70,5 @@ class URLParser:
 
 
 def parse_problem_url(url: str) -> ProblemIdentifier:
-    """
-    Convenience function to parse problem URL.
-    """
+    """Convenience function to parse problem URL."""
     return URLParser.parse(url)

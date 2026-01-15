@@ -1,7 +1,7 @@
 from domain.models.problem import ProblemData, ProblemIdentifier
 
 # Create a ProblemIdentifier
-pid = ProblemIdentifier(contest_id="123", problem_id="A")
+pid = ProblemIdentifier(contest_id=123, problem="A")
 
 # Create a ProblemData
 p = ProblemData(
