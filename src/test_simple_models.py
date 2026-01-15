@@ -7,5 +7,5 @@ p = ProblemData(name="Two Sum", rating=1200, tags=["array"])
 print("ProblemData test:", p)
 
 # Test ProblemIdentifier
-pid = ProblemIdentifier(contest_id=123, index="A")
+pid = ProblemIdentifier(contest_id=123, problem_id="A")
 print("ProblemIdentifier test:", pid)

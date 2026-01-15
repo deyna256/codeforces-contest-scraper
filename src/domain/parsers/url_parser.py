@@ -35,8 +35,8 @@ class URLParser:
 
             identifier = ProblemIdentifier(
                 contest_id=contest_id,
-                problem_id=problem_id,
-                is_gym=False,
+                problem_id=problem_id
+,
             )
 
             logger.info(f"Parsed URL to problem: {identifier}")

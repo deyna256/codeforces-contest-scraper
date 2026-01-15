@@ -43,7 +43,7 @@ class ProblemPageParser:
 
         try:
             html = await self.http_client.get_text(url)
-            soup = BeautifulSoup(html, "lxml")
+            soup = BeautifulSoup(html, "html.parser")
 
             # Extract minimal metadata
             title = self._extract_title(soup)

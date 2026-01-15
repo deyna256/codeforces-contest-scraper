@@ -40,7 +40,7 @@ def test_parse_invalid_urls() -> None:
 
 
 def test_build_problem_url() -> None:
-    contest_id = ProblemIdentifier(contest_id="1234", problem_id="A", is_gym=False)
+    contest_id = ProblemIdentifier(contest_id="1234", problem_id="A")
     assert (
         URLParser.build_problem_url(identifier=contest_id)
         == "https://codeforces.com/problemset/problem/1234/A"
@@ -48,7 +48,7 @@ def test_build_problem_url() -> None:
 
 
 def test_build_contest_url() -> None:
-    contest_id = ProblemIdentifier(contest_id="1234", problem_id="A", is_gym=False)
+    contest_id = ProblemIdentifier(contest_id="1234", problem_id="A")
     assert (
         URLParser.build_contest_url(identifier=contest_id) == "https://codeforces.com/contest/1234"
     )
