@@ -75,10 +75,11 @@ class EditorialController(Controller):
             title=problem_data.title,
             url=problem_data.url,
             contest_name=problem_data.contest_name,
-            tags=problem_data.tags or [],
-            time_limit=problem_data.time_limit,
-            memory_limit=problem_data.memory_limit,
+            tags=[],            # removed from domain model
+            time_limit=None,    # removed from domain model
+            memory_limit=None,  # removed from domain model
         )
+
 
         editorial_schema = EditorialSchema(
             problem_id=editorial.problem_id,
