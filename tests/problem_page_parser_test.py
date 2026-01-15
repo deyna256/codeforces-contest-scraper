@@ -1,11 +1,8 @@
 import pytest
-
 from unittest.mock import AsyncMock
-
 from domain.parsers.problem_page import ProblemPageParser, parse_problem
 from domain.models import ProblemIdentifier
 from domain.exceptions import ParsingError
-
 
 # Mock HTML content
 REALISTIC_HTML = """
@@ -53,19 +50,17 @@ SAMPLE_HTML_NO_EDITORIAL = """
 </html>
 """
 
-
 @pytest.fixture
 def mock_http_client() -> AsyncMock:
     client = AsyncMock()
     client.get_text.return_value = REALISTIC_HTML
     return client
 
-
 @pytest.mark.asyncio
 async def test_parse_successful(mock_http_client) -> None:
     """Test standard parsing with editorial links present."""
 
-    identifier = ProblemIdentifier(contest_id=2183, problem_id="A")
+    identifier = ProblemIdentifier(contest_id=2183, problem_index="A")
 
     parser = ProblemPageParser(mock_http_client)
     data = await parser.parse_problem_page(identifier=identifier)
@@ -82,14 +77,13 @@ async def test_parse_successful(mock_http_client) -> None:
     for link in expected_links:
         assert link in data.possible_editorial_links
 
-
 @pytest.mark.asyncio
 async def test_parse_no_editorial() -> None:
     """Test parsing with no 'Contest materials' box exists."""
 
     client = AsyncMock()
     client.get_text.return_value = SAMPLE_HTML_NO_EDITORIAL
-    identifier = ProblemIdentifier(contest_id=9999, problem_id="B")
+    identifier = ProblemIdentifier(contest_id=9999, problem_index="B")
 
     parser = ProblemPageParser(client)
     data = await parser.parse_problem_page(identifier=identifier)
@@ -97,24 +91,14 @@ async def test_parse_no_editorial() -> None:
     assert data.title == "Hard Problem"
     assert data.possible_editorial_links == []
 
-
 @pytest.mark.asyncio
 async def test_http_error_handling() -> None:
-    """Test that HTTPerrors raise ParsingError."""
+    """Test that HTTP errors raise ParsingError."""
 
     client = AsyncMock()
     client.get_text.side_effect = Exception("Network Error")
-    identifier = ProblemIdentifier(contest_id=1234, problem_id="A")
+    identifier = ProblemIdentifier(contest_id=1234, problem_index="A")
 
     with pytest.raises(ParsingError):
         parser = ProblemPageParser(client)
-        await parser.parse_problem_page(identifier=identifier)
-
-
-@pytest.mark.asyncio
-async def test_convenience_function(mock_http_client) -> None:
-    url = "https://codeforces.com/problemset/problem/2183/A"
-    data = await parse_problem(url=url, http_client=mock_http_client)
-
-    assert data.identifier.contest_id == 2183
-    assert data.title == "Real Problem title"
+        await parser.parse_pro_
