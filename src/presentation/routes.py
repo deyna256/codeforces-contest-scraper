@@ -42,7 +42,7 @@ class EditorialController(Controller):
         summary="Get editorial for Codeforces problem",
         description="Fetch and extract editorial/solution for a given Codeforces problem URL",
         status_code=200,
-        cache=True,  # Enable response caching
+        cache=False,
         cache_key_builder=build_cache_key,
     )
     async def get_editorial(

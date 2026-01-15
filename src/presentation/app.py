@@ -1,7 +1,4 @@
-"""LiteStar application setup."""
-
 from litestar import Litestar
-from litestar.config.response_cache import ResponseCacheConfig
 from litestar.middleware.rate_limit import RateLimitConfig
 from litestar.openapi.config import OpenAPIConfig
 from litestar.stores.redis import RedisStore
@@ -22,34 +19,18 @@ from presentation.routes import EditorialController
 
 
 def create_app() -> Litestar:
-    """
-    Create and configure LiteStar application.
-
-    Returns:
-        Configured Litestar app instance
-    """
     settings = get_settings()
 
-    # Configure Redis store for rate limiting and caching
     redis_store = RedisStore.with_client(
         url=settings.redis_url,
     )
 
-    # Configure rate limiting
-    # Limit: 10 requests per minute per client
     rate_limit_config = RateLimitConfig(
         rate_limit=("minute", 10),
         store="redis",
-        exclude=["/schema"],  # Exclude OpenAPI schema endpoint
+        exclude=["/schema"],
     )
 
-    # Configure response caching
-    # Cache responses for 1 hour (3600 seconds)
-    response_cache_config = ResponseCacheConfig(
-        default_expiration=3600,
-    )
-
-    # Exception handlers mapping
     exception_handlers = {
         CodeforcesEditorialError: exception_to_http_response,
         URLParsingError: exception_to_http_response,
@@ -60,31 +41,25 @@ def create_app() -> Litestar:
         OpenAIAPIError: exception_to_http_response,
     }
 
-    # Configure OpenAPI documentation
     openapi_config = OpenAPIConfig(
         title="Codeforces Editorial Finder API",
         version="1.0.0",
         description="API for finding and extracting editorials for Codeforces problems",
     )
 
-    # Create LiteStar app
     app = Litestar(
         route_handlers=[EditorialController],
         stores={"redis": redis_store},
         middleware=[rate_limit_config.middleware],
-        response_cache_config=response_cache_config,
         exception_handlers=exception_handlers,
         debug=settings.log_level == "DEBUG",
         openapi_config=openapi_config,
     )
 
     logger.info("LiteStar application created")
-    logger.info("Rate limit: 10 requests per minute")
-    logger.info("Response cache TTL: 3600 seconds")
     logger.info(f"Redis URL: {settings.redis_url}")
 
     return app
 
 
-# Create app instance
 app = create_app()

@@ -147,6 +147,7 @@ class EditorialExtractor:
 
         return None
 
+
 async def extract_editorial(
     tutorial: TutorialData,
     identifier: ProblemIdentifier,
