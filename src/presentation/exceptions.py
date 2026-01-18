@@ -27,7 +27,9 @@ if TYPE_CHECKING:
     pass
 
 
-def exception_to_http_response(request: Request, exc: Exception) -> Response[ErrorResponse]:
+def exception_to_http_response(
+    request: Request, exc: Exception
+) -> Response[ErrorResponse]:
     """
     Convert domain exceptions to HTTP responses.
 

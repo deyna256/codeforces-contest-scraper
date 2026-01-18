@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import List, Optional, Union
 
+
 @dataclass(frozen=True)
 class ProblemIdentifier:
     contest_id: int
@@ -29,6 +30,7 @@ class ProblemIdentifier:
         index = problem_index or problem or problem_id
         if index is None:
             raise TypeError("ProblemIdentifier requires a problem index")
+
         object.__setattr__(self, "problem_index", index)
         object.__setattr__(self, "is_gym", is_gym)
 

@@ -14,7 +14,9 @@ if TYPE_CHECKING:
     from litestar.datastructures import State
 
 
-async def provide_orchestrator(state: "State") -> AsyncGenerator[AsyncEditorialOrchestrator, None]:
+async def provide_orchestrator(
+    state: "State",
+) -> AsyncGenerator[AsyncEditorialOrchestrator, None]:
     """
     Provide AsyncEditorialOrchestrator with all dependencies.
 

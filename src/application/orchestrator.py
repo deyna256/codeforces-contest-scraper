@@ -1,7 +1,7 @@
 """Async orchestrator for coordinating the editorial extraction process."""
 from loguru import logger
 
-from domain.models import Editorial, ProblemData, CachedEditorial
+from domain.models import Editorial, ProblemData
 from domain.parsers.url_parser import URLParser
 from domain.parsers.problem_page import ProblemPageParser
 from domain.parsers.tutorial_parser import TutorialParser

@@ -13,12 +13,14 @@ p = ProblemData(
     title="Two Sum",
     url="https://codeforces.com/problemset/problem/123/A",
     contest_name="Example Contest",
-    possible_editorial_links=[]
+    possible_editorial_links=[],
 )
 print("ProblemData test:", p)
 
 # --- Test CodeSnippet ---
-snippet = CodeSnippet(language="Python", code="print('Hello, World!')", description="Example code snippet")
+snippet = CodeSnippet(
+    language="Python", code="print('Hello, World!')", description="Example code snippet"
+)
 print("CodeSnippet test:", snippet)
 
 # --- Test Editorial ---
@@ -32,7 +34,7 @@ e = Editorial(
     code_snippets=[snippet],
     hints=["Check for duplicates", "Consider negative numbers"],
     notes="This is just a sample editorial",
-    source_url="https://codeforces.com/blog/entry/12345"
+    source_url="https://codeforces.com/blog/entry/12345",
 )
 print("Editorial test:", e)
 

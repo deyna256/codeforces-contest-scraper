@@ -75,7 +75,9 @@ class AsyncOpenAIClient:
 
             response_text = response.choices[0].message.content
             if response_text is None:
-                logger.warning("Response content is None - reasoning model may need more max_tokens")
+                logger.warning(
+                    "Response content is None - reasoning model may need more max_tokens"
+                )
                 response_text = ""
 
             logger.debug(f"Received response ({len(response_text)} chars)")
@@ -95,7 +97,9 @@ class AsyncOpenAIClient:
             logger.error(f"Unexpected error calling OpenAI API: {e}")
             raise OpenAIAPIError(f"Failed to call OpenAI API: {e}") from e
 
-    async def find_editorial_link(self, contest_html: str, problem_id: str) -> str | None:
+    async def find_editorial_link(
+        self, contest_html: str, problem_id: str
+    ) -> str | None:
         """
         Use OpenAI to extract an editorial URL for a given problem from contest page HTML.
         Returns None if no valid link is found.
@@ -147,7 +151,9 @@ class AsyncOpenAIClient:
         contest_id = "unknown"
         identifier = ProblemIdentifier(contest_id=contest_id, problem=problem_id)
 
-        prompt = get_extract_solution_prompt(tutorial_content, identifier, problem_title)
+        prompt = get_extract_solution_prompt(
+            tutorial_content, identifier, problem_title
+        )
 
         try:
             response = await self.send_message(

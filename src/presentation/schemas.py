@@ -26,7 +26,9 @@ class EditorialSchema(BaseModel):
     """Schema for editorial data."""
 
     problem: str = Field(..., description="Problem ID")
-    solution_text: str = Field(..., description="Full solution text (original editorial)")
+    solution_text: str = Field(
+        ..., description="Full solution text (original editorial)"
+    )
     source_url: Optional[str] = Field(None, description="Editorial source URL")
     extracted_at: datetime = Field(..., description="When editorial was extracted")
 

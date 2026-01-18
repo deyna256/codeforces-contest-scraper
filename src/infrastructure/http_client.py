@@ -67,7 +67,9 @@ class AsyncHTTPClient:
                 logger.error(f"HTTP error {response.status_code} for {url}")
                 raise NetworkError(f"HTTP error {response.status_code}: {url}")
 
-            logger.debug(f"Successfully fetched URL: {url} (status: {response.status_code})")
+            logger.debug(
+                f"Successfully fetched URL: {url} (status: {response.status_code})"
+            )
             return response
 
         except ProblemNotFoundError:
@@ -83,7 +85,11 @@ class AsyncHTTPClient:
         Fetch a URL and return its text body, decoding bytes if needed.
         """
         response = await self.get(url)
-        return response.text if hasattr(response, "text") else response.content.decode("utf-8")
+        return (
+            response.text
+            if hasattr(response, "text")
+            else response.content.decode("utf-8")
+        )
 
     async def get_bytes(self, url: str) -> bytes:
         response = await self.get(url)
@@ -109,7 +115,9 @@ class AsyncHTTPClient:
                 page = await browser.new_page(user_agent=self.user_agent)
 
                 # Navigate to page
-                await page.goto(url, wait_until="domcontentloaded", timeout=self.timeout * 1000)
+                await page.goto(
+                    url, wait_until="domcontentloaded", timeout=self.timeout * 1000
+                )
 
                 # Wait for dynamic content to load
                 await page.wait_for_timeout(wait_time)
@@ -120,7 +128,9 @@ class AsyncHTTPClient:
                 # Cleanup
                 await browser.close()
 
-                logger.info(f"Successfully fetched URL with JS: {url} ({len(content)} chars)")
+                logger.info(
+                    f"Successfully fetched URL with JS: {url} ({len(content)} chars)"
+                )
                 return content
 
         except Exception as e:

@@ -9,7 +9,7 @@ p = ProblemData(
     title="Two Sum",
     url="https://codeforces.com/problemset/problem/123/A",
     contest_name="Example Contest",
-    possible_editorial_links=[]
+    possible_editorial_links=[],
 )
 
 print("ProblemData test:", p)

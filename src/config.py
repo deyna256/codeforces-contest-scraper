@@ -16,13 +16,16 @@ class Settings(BaseSettings):
 
     # Cache
     cache_dir: str = Field(
-        default="~/.cache/codeforces-editorial", description="Directory for cache storage"
+        default="~/.cache/codeforces-editorial",
+        description="Directory for cache storage",
     )
     cache_ttl_hours: int = Field(
         default=168,  # 7 days
         description="Cache TTL in hours",
     )
-    redis_url: str = Field(default="redis://localhost:6379/0", description="Redis connection URL")
+    redis_url: str = Field(
+        default="redis://localhost:6379/0", description="Redis connection URL"
+    )
 
     # HTTP
     http_timeout: int = Field(default=30, description="HTTP request timeout in seconds")
@@ -31,7 +34,8 @@ class Settings(BaseSettings):
         default=5000, description="Time to wait for JS content to load (milliseconds)"
     )
     user_agent: str = Field(
-        default="codeforces-editorial-finder/1.0", description="User agent for HTTP requests"
+        default="codeforces-editorial-finder/1.0",
+        description="User agent for HTTP requests",
     )
 
     # Logging
