@@ -31,12 +31,6 @@ class EditorialLoadError(CodeforcesEditorialError):
     pass
 
 
-class OpenAIAPIError(CodeforcesEditorialError):
-    """Error communicating with OpenAI API."""
-
-    pass
-
-
 class ExtractionError(CodeforcesEditorialError):
     """Failed to extract solution from editorial."""
 

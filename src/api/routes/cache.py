@@ -4,7 +4,7 @@ from litestar.status_codes import HTTP_200_OK
 from loguru import logger
 
 from api.dependencies import provide_cache_client
-from services.editorial import clear_cache
+from services import clear_cache
 from infrastructure.cache_redis import AsyncRedisCache
 
 

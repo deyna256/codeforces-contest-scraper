@@ -12,10 +12,9 @@ from domain.exceptions import (
     ExtractionError,
     ParsingError,
     CacheError,
-    OpenAIAPIError,
 )
 from api.exceptions import exception_to_http_response
-from api.routes import EditorialController, CacheController
+from api.routes import CacheController
 
 
 def create_app() -> Litestar:
@@ -36,7 +35,6 @@ def create_app() -> Litestar:
         ExtractionError: exception_to_http_response,
         ParsingError: exception_to_http_response,
         CacheError: exception_to_http_response,
-        OpenAIAPIError: exception_to_http_response,
     }
 
     openapi_config = OpenAPIConfig(
@@ -46,7 +44,7 @@ def create_app() -> Litestar:
     )
 
     app = Litestar(
-        route_handlers=[EditorialController, CacheController],
+        route_handlers=[CacheController],
         stores={"redis": redis_store},
         middleware=[rate_limit_config.middleware],
         exception_handlers=exception_handlers,

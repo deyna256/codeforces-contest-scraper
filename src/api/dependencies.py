@@ -4,7 +4,6 @@ from typing import TYPE_CHECKING
 from loguru import logger
 
 from infrastructure.http_client import AsyncHTTPClient
-from infrastructure.openai_client import AsyncOpenAIClient
 from infrastructure.cache_redis import AsyncRedisCache
 
 if TYPE_CHECKING:
@@ -19,16 +18,6 @@ async def provide_http_client(state: "State") -> AsyncGenerator[AsyncHTTPClient,
     finally:
         await client.close()
         logger.debug("HTTP client closed")
-
-
-async def provide_ai_client(state: "State") -> AsyncGenerator[AsyncOpenAIClient, None]:
-    client = AsyncOpenAIClient()
-    logger.debug("OpenAI client created")
-    try:
-        yield client
-    finally:
-        await client.close()
-        logger.debug("OpenAI client closed")
 
 
 async def provide_cache_client(
@@ -53,7 +42,6 @@ async def provide_cache_client(
 
 async def provide_clients(state: "State") -> AsyncGenerator[dict, None]:
     http_client = AsyncHTTPClient()
-    ai_client = AsyncOpenAIClient()
     cache_client = AsyncRedisCache()
 
     use_cache = False
@@ -67,13 +55,11 @@ async def provide_clients(state: "State") -> AsyncGenerator[dict, None]:
     try:
         yield {
             "http_client": http_client,
-            "ai_client": ai_client,
             "cache_client": cache_client if use_cache else None,
             "use_cache": use_cache,
         }
     finally:
         logger.debug("Cleaning up request resources")
         await http_client.close()
-        await ai_client.close()
         await cache_client.close()
         logger.debug("All clients closed")
