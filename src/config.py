@@ -10,10 +10,6 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
 
-    # OpenAI API
-    openai_api_key: str = Field(..., description="OpenAI API key")
-    openai_model: str = Field(default="gpt-4o", description="OpenAI model to use")
-
     # Cache
     cache_dir: str = Field(
         default="~/.cache/codeforces-editorial", description="Directory for cache storage"
