@@ -34,7 +34,11 @@ class AsyncHTTPClient:
         await self.close()
 
     async def close(self) -> None:
-        await self.client.close()
+        try:
+            await self.client.close()
+        except Exception as e:
+            logger.warning(f"Error during HTTP client cleanup: {e}")
+            # Ignore cleanup errors to prevent breaking dependency injection
 
     @retry(
         stop=stop_after_attempt(3),

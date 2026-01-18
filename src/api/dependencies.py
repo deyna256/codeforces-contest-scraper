@@ -4,7 +4,9 @@ from typing import TYPE_CHECKING
 from loguru import logger
 
 from infrastructure.http_client import AsyncHTTPClient
+from infrastructure.codeforces_client import CodeforcesApiClient
 from infrastructure.cache_redis import AsyncRedisCache
+from services.problem import ProblemService
 
 if TYPE_CHECKING:
     from litestar.datastructures import State
@@ -63,3 +65,14 @@ async def provide_clients(state: "State") -> AsyncGenerator[dict, None]:
         await http_client.close()
         await cache_client.close()
         logger.debug("All clients closed")
+
+
+async def provide_problem_service(state: "State") -> AsyncGenerator[ProblemService, None]:
+    service = ProblemService()
+
+    logger.debug("ProblemService created")
+
+    try:
+        yield service
+    finally:
+        logger.debug("ProblemService cleaned up")

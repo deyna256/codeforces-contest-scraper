@@ -3,7 +3,6 @@
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Optional
 
 
 class TutorialFormat(str, Enum):
@@ -48,18 +47,29 @@ class ProblemIdentifier:
 
 
 @dataclass
+class Problem:
+    """Domain model for a Codeforces problem."""
+
+    statement: str
+    contest_id: str
+    id: str
+    tags: list[str] = field(default_factory=list)
+    rating: int | None = None
+
+
+@dataclass
 class ProblemData:
     """Data extracted from a problem page."""
 
     identifier: ProblemIdentifier
     title: str
     url: str
-    contest_name: Optional[str] = None
-    description: Optional[str] = None
-    time_limit: Optional[str] = None
-    memory_limit: Optional[str] = None
+    contest_name: str | None = None
+    description: str | None = None
+    time_limit: str | None = None
+    memory_limit: str | None = None
     tags: list[str] = field(default_factory=list)
-    announcement_text: Optional[str] = None
+    announcement_text: str | None = None
     possible_editorial_links: list[str] = field(default_factory=list)
 
 
@@ -71,18 +81,9 @@ class TutorialData:
     format: TutorialFormat
     content: str  # Raw HTML or extracted text
     language: Language = Language.AUTO
-    title: Optional[str] = None
-    author: Optional[str] = None
-    raw_bytes: Optional[bytes] = None  # For PDF content
-
-
-@dataclass
-class CodeSnippet:
-    """Code snippet from editorial."""
-
-    language: str
-    code: str
-    description: Optional[str] = None
+    title: str | None = None
+    author: str | None = None
+    raw_bytes: bytes | None = None  # For PDF content
 
 
 @dataclass
@@ -91,7 +92,7 @@ class Editorial:
 
     problem_id: str
     solution_text: str
-    source_url: Optional[str] = None
+    source_url: str | None = None
     extracted_at: datetime = field(default_factory=datetime.now)
 
 
