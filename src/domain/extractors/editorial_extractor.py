@@ -71,7 +71,9 @@ class EditorialExtractor:
 
         except Exception as e:
             logger.error(f"Failed to extract editorial: {e}")
-            raise ExtractionError(f"Failed to extract editorial for {identifier}: {e}") from e
+            raise ExtractionError(
+                f"Failed to extract editorial for {identifier}: {e}"
+            ) from e
 
     def _parse_response(
         self,
@@ -92,7 +94,9 @@ class EditorialExtractor:
         """
         # Check if AI couldn't find the problem in the tutorial
         if response.strip().startswith("NOT_FOUND"):
-            logger.warning(f"AI could not find problem {identifier.problem} in tutorial")
+            logger.warning(
+                f"AI could not find problem {identifier.problem} in tutorial"
+            )
             raise ExtractionError(
                 f"Could not find editorial for problem {identifier.problem} in the tutorial. "
                 f"AI response: {response[:500]}"

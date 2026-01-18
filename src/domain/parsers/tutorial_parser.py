@@ -59,7 +59,9 @@ class TutorialParser:
         if "/blog/" in url or "/contest/" in url:
             settings = get_settings()
             wait_time = settings.http_js_wait
-            logger.info(f"Using JS rendering for blog/contest page (wait: {wait_time}ms)")
+            logger.info(
+                f"Using JS rendering for blog/contest page (wait: {wait_time}ms)"
+            )
             html = await self.http.get_text_with_js(url, wait_time=wait_time)
         else:
             html = await self.http.get_text(url)

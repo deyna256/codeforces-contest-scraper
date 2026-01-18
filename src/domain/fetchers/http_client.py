@@ -60,7 +60,9 @@ class HTTPClient:
         try:
             response = self.client.get(url)
             response.raise_for_status()
-            logger.debug(f"Successfully fetched URL: {url} (status: {response.status_code})")
+            logger.debug(
+                f"Successfully fetched URL: {url} (status: {response.status_code})"
+            )
             return response
 
         except httpx.HTTPStatusError as e:
@@ -106,7 +108,9 @@ class HTTPClient:
                 page = browser.new_page(user_agent=self.user_agent)
 
                 # Navigate to page
-                page.goto(url, wait_until="domcontentloaded", timeout=self.timeout * 1000)
+                page.goto(
+                    url, wait_until="domcontentloaded", timeout=self.timeout * 1000
+                )
 
                 # Wait for dynamic content to load
                 page.wait_for_timeout(wait_time)
@@ -117,7 +121,9 @@ class HTTPClient:
                 # Cleanup
                 browser.close()
 
-                logger.info(f"Successfully fetched URL with JS: {url} ({len(content)} chars)")
+                logger.info(
+                    f"Successfully fetched URL with JS: {url} ({len(content)} chars)"
+                )
                 return content
 
         except Exception as e:

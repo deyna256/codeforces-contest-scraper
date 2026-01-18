@@ -152,7 +152,9 @@ class ProblemPageParser:
         return href
 
 
-async def parse_problem(url: str, http_client: Optional["AsyncHTTPClient"] = None) -> ProblemData:
+async def parse_problem(
+    url: str, http_client: Optional["AsyncHTTPClient"] = None
+) -> ProblemData:
     """
     Convenience function to parse problem from URL.
 

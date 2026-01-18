@@ -133,7 +133,9 @@ class OpenAIClient:
         pid = problem
         identifier = ProblemIdentifier(contest_id=contest_id, problem=pid)
 
-        prompt = get_extract_solution_prompt(tutorial_content, identifier, problem_title)
+        prompt = get_extract_solution_prompt(
+            tutorial_content, identifier, problem_title
+        )
 
         try:
             response = self.send_message(
