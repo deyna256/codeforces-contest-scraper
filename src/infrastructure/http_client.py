@@ -21,7 +21,7 @@ class AsyncHTTPClient:
         """
         settings = get_settings()
         self.timeout = timeout or 30  # Default timeout: 30 seconds
-        self.user_agent = user_agent or settings.user_agent
+        self.user_agent = user_agent or settings.user_agent or "codeforces-editorial-finder/1.0"
         self.retries = settings.http_retries
 
         # HTTP client using curl_cffi with browser impersonation

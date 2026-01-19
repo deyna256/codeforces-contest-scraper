@@ -9,8 +9,6 @@ from config import get_settings
 from domain.exceptions import (
     CodeforcesEditorialError,
     URLParsingError,
-    EditorialNotFoundError,
-    ExtractionError,
     ParsingError,
     CacheError,
 )
@@ -47,8 +45,6 @@ def create_app() -> Litestar:
     exception_handlers = {
         CodeforcesEditorialError: exception_to_http_response,
         URLParsingError: exception_to_http_response,
-        EditorialNotFoundError: exception_to_http_response,
-        ExtractionError: exception_to_http_response,
         ParsingError: exception_to_http_response,
         CacheError: exception_to_http_response,
     }

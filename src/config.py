@@ -19,8 +19,8 @@ class Settings(BaseSettings):
 
     # HTTP
     http_retries: int = Field(default=3, description="Number of HTTP retry attempts")
-    user_agent: str = Field(
-        default="codeforces-editorial-finder/1.0", description="User agent for HTTP requests"
+    user_agent: Optional[str] = Field(
+        default=None, description="User agent for HTTP requests. If None, will use default app UA"
     )
 
     # Logging

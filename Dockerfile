@@ -12,10 +12,7 @@ ENV UV_LINK_MODE=copy
 
 WORKDIR /app
 
-# Install build dependencies
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends build-essential && \
-    rm -rf /var/lib/apt/lists/*
+# No build dependencies needed
 
 # Install dependencies separately to leverage cache
 RUN --mount=type=cache,target=/root/.cache/uv \
@@ -27,12 +24,9 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 COPY src/ ./src/
 COPY pyproject.toml uv.lock ./
 
-# Install the project and install Playwright dependencies/browsers
+# Install the project
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-dev
-
-# Install Playwright browsers (only Chromium)
-RUN uv run playwright install chromium --with-deps
 
 # Final stage - using uv image as in example
 FROM ghcr.io/astral-sh/uv:python3.13-bookworm-slim
@@ -45,8 +39,6 @@ RUN apt-get update && \
 # Copy the virtual environment from the builder stage
 COPY --from=builder /app/.venv /.venv
 
-# Copy Playwright browsers from the builder stage
-COPY --from=builder /root/.cache/ms-playwright /root/.cache/ms-playwright
 
 # Environment variables from example
 ENV PATH="/.venv/bin:$PATH" \
@@ -62,9 +54,6 @@ WORKDIR /app
 COPY src/ .
 COPY entrypoints/ /entrypoints/
 RUN chmod +x /entrypoints/*.sh
-
-# Install Playwright system dependencies in the final image
-RUN python3 -m playwright install-deps chromium
 
 EXPOSE 8000
 
