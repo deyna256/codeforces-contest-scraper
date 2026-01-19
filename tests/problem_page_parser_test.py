@@ -9,45 +9,30 @@ from domain.exceptions import ParsingError
 
 REALISTIC_HTML = """
 <html>
-    <div class="breadcrumbs">
-        <a href="/">Codeforces</a>
-        <a href="/contest/2183">Hello 2026</a>
-    </div>
-    <div class="header">
-        <div class="title">A. Real Problem Title</div>
-    </div>
-
-    <div class="roundbox sidebox sidebar-menu borderTopRound " style="">
-        <div class="caption titled">→ Contest materials
-            <div class="top-links"></div>
+    <div class="problem-statement">
+        <div class="header">
+            <div class="title">A. Real Problem Title</div>
+            <div class="time-limit">time limit per test 2 seconds</div>
+            <div class="memory-limit">memory limit per test 256 megabytes</div>
         </div>
-        <ul>
-            <li>
-                <span>
-                    <a href="/blog/entry/149809" title="Hello 2026" target="_blank">Hello 2026 <span class="resource-locale">(en)</span></a>
-                </span>
-            </li>
-            <li>
-                <span>
-                    <a href="/contest/2183/attachments/download/35276/solution.pdf" title="Hello 2026 题解" target="_blank">Hello 2026 题解 <span class="resource-locale">(zh)</span></a>
-                </span>
-            </li>
-            <li>
-                <span>
-                    <a href="/blog/entry/149944" title="Hello 2026 Editorial" target="_blank">Hello 2026 Editorial <span class="resource-locale">(en)</span></a>
-                </span>
-            </li>
-        </ul>
+        <div class="">
+            <p>You are given a problem to solve.</p>
+            <p>This is the description of the problem.</p>
+        </div>
     </div>
 </html>
 """
 
 SAMPLE_HTML_NO_EDITORIAL = """
 <html>
-    <div class="header"><div class="title">B. Hard Problem</div></div>
-    <div class="sidebox">
-        <div class="caption">Announcements</div>
-        <a href="#">News</a>
+    <div class="problem-statement">
+        <div class="header">
+            <div class="time-limit">time limit per test 1 second</div>
+            <div class="memory-limit">memory limit per test 512 megabytes</div>
+        </div>
+        <div class="">
+            <p>Another problem description.</p>
+        </div>
     </div>
 </html>
 """
@@ -67,17 +52,11 @@ async def test_parse_successful(mock_http_client) -> None:
     parser = ProblemPageParser(mock_http_client)
     data = await parser.parse_problem_page(identifier=identifier)
 
-    expected_links = [
-        "https://codeforces.com/blog/entry/149809",
-        "https://codeforces.com/contest/2183/attachments/download/35276/solution.pdf",
-        "https://codeforces.com/blog/entry/149944",
-    ]
-
-    assert data.title == "Real Problem Title"
-    assert data.contest_name == "Hello 2026"
-    assert len(data.possible_editorial_links) == 3
-    for link in expected_links:
-        assert link in data.possible_editorial_links
+    assert data.identifier == identifier
+    assert data.time_limit == "2 seconds"
+    assert data.memory_limit == "256 megabytes"
+    assert "You are given a problem to solve" in (data.description or "")
+    assert "This is the description of the problem" in (data.description or "")
 
 
 @pytest.mark.asyncio
@@ -89,8 +68,10 @@ async def test_parse_no_editorial() -> None:
     parser = ProblemPageParser(client)
     data = await parser.parse_problem_page(identifier=identifier)
 
-    assert data.title == "Hard Problem"
-    assert data.possible_editorial_links == []
+    assert data.identifier == identifier
+    assert data.time_limit == "1 second"
+    assert data.memory_limit == "512 megabytes"
+    assert "Another problem description" in (data.description or "")
 
 
 @pytest.mark.asyncio

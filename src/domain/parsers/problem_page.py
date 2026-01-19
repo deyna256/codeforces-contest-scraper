@@ -118,17 +118,10 @@ class ProblemPageParser:
                 return None
 
             # Extract all text from the problem statement, preserving structure
-            # We'll get text from all divs within problem-statement
+            # We'll get text from all divs within problem-statement except header
             text_parts = []
 
-            # Get the header (title only, not limits)
-            header = problem_statement.find("div", class_="header")
-            if header:
-                title_div = header.find("div", class_="title")
-                if title_div:
-                    text_parts.append(title_div.get_text(strip=True))
-
-            # Get main sections: input, output, etc.
+            # Get main sections: input, output, etc. (excluding header)
             for section_class in [
                 "",
                 "input-specification",
@@ -139,10 +132,16 @@ class ProblemPageParser:
                 if section_class:
                     section = problem_statement.find("div", class_=section_class)
                 else:
-                    # First div without class is usually the problem description
-                    section = problem_statement.find("div", recursive=False)
+                    # Find the first non-header div (usually the problem description)
+                    all_divs = problem_statement.find_all("div", recursive=False)
+                    for div in all_divs:
+                        if not div.get("class") or div.get("class") == [""]:
+                            section = div
+                            break
+                    else:
+                        section = None
 
-                if section and section_class != "header":
+                if section:
                     section_text = section.get_text(separator="\n", strip=True)
                     if section_text:
                         text_parts.append(section_text)
