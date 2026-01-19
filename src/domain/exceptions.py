@@ -19,8 +19,6 @@ class ProblemNotFoundError(CodeforcesEditorialError):
     pass
 
 
-
-
 class NetworkError(CodeforcesEditorialError):
     """Network or HTTP request error."""
 

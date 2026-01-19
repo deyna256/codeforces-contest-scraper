@@ -1,6 +1,5 @@
 """Async Redis client for caching Codeforces editorial data."""
 
-import json
 from typing import Optional
 
 import redis.asyncio as redis
@@ -49,7 +48,6 @@ class AsyncRedisCache:
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         await self.close()
 
-
     async def flushdb(self) -> None:
         """Clear all cache (flushes current database)."""
         if not self.client:
@@ -62,4 +60,3 @@ class AsyncRedisCache:
         except Exception as e:
             logger.error(f"Failed to flush cache: {e}")
             raise CacheError(f"Failed to flush cache: {e}") from e
-

@@ -39,5 +39,3 @@ class ProblemData:
     description: str | None = None
     time_limit: str | None = None
     memory_limit: str | None = None
-
-

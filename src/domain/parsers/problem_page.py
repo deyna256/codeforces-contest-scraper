@@ -1,9 +1,8 @@
 """Parser for Codeforces problem pages."""
 
-import re
 from typing import Optional, TYPE_CHECKING
 
-from bs4 import BeautifulSoup, Tag
+from bs4 import BeautifulSoup
 from loguru import logger
 
 from domain.models import ProblemData, ProblemIdentifier
@@ -58,7 +57,6 @@ class ProblemPageParser:
         except Exception as e:
             logger.error(f"Failed to parse problem page: {e}")
             raise ParsingError(f"Failed to parse problem page {url}: {e}") from e
-
 
     def _extract_time_limit(self, soup: BeautifulSoup) -> Optional[str]:
         """Extract time limit from problem page."""

@@ -58,4 +58,3 @@ class URLParser:
 
         logger.debug(f"Built problem URL: {url}")
         return url
-

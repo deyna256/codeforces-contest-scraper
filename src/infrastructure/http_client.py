@@ -88,4 +88,3 @@ class AsyncHTTPClient:
         """
         response = await self.get(url)
         return response.text if hasattr(response, "text") else response.content.decode("utf-8")
-
