@@ -49,57 +49,6 @@ class AsyncRedisCache:
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         await self.close()
 
-    async def get(self, key: str) -> Optional[dict]:
-        """
-        Retrieve a cached value and deserialize it from JSON.
-        Returns None on cache miss or read errors.
-        """
-
-        if not self.client:
-            raise CacheError("Redis client not connected")
-
-        try:
-            data = await self.client.get(key)
-
-            if data is None:
-                logger.debug(f"Cache miss for key: {key}")
-                return None
-
-            logger.debug(f"Cache hit for key: {key}")
-            return json.loads(data)
-
-        except Exception as e:
-            logger.warning(f"Error reading from cache: {e}")
-            return None
-
-    async def set(self, key: str, value: dict, ttl: Optional[int] = None) -> None:
-        """
-        Store a dictionary in Redis as JSON, applying the default TTL if none is provided.
-        """
-        if not self.client:
-            raise CacheError("Redis client not connected")
-
-        ttl = ttl or self.ttl_seconds
-
-        try:
-            data = json.dumps(value)
-            await self.client.setex(key, ttl, data)
-            logger.debug(f"Cached data for key: {key} (TTL: {ttl}s)")
-
-        except Exception as e:
-            logger.error(f"Failed to cache data: {e}")
-            raise CacheError(f"Failed to cache data: {e}") from e
-
-    async def delete(self, key: str) -> None:
-        if not self.client:
-            raise CacheError("Redis client not connected")
-
-        try:
-            await self.client.delete(key)
-            logger.debug(f"Deleted cache entry: {key}")
-
-        except Exception as e:
-            logger.warning(f"Error deleting cache entry: {e}")
 
     async def flushdb(self) -> None:
         """Clear all cache (flushes current database)."""
@@ -114,15 +63,3 @@ class AsyncRedisCache:
             logger.error(f"Failed to flush cache: {e}")
             raise CacheError(f"Failed to flush cache: {e}") from e
 
-    async def exists(self, key: str) -> bool:
-        """
-        Check whether a key exists in Redis, returning False on errors.
-        """
-        if not self.client:
-            raise CacheError("Redis client not connected")
-
-        try:
-            return await self.client.exists(key) > 0
-        except Exception as e:
-            logger.warning(f"Error checking key existence: {e}")
-            return False

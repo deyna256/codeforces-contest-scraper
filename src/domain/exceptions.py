@@ -19,22 +19,6 @@ class ProblemNotFoundError(CodeforcesEditorialError):
     pass
 
 
-class EditorialNotFoundError(CodeforcesEditorialError):
-    """Editorial/tutorial link not found for the problem."""
-
-    pass
-
-
-class EditorialLoadError(CodeforcesEditorialError):
-    """Failed to load or download editorial content."""
-
-    pass
-
-
-class ExtractionError(CodeforcesEditorialError):
-    """Failed to extract solution from editorial."""
-
-    pass
 
 
 class NetworkError(CodeforcesEditorialError):
@@ -45,12 +29,6 @@ class NetworkError(CodeforcesEditorialError):
 
 class CacheError(CodeforcesEditorialError):
     """Cache operation error."""
-
-    pass
-
-
-class ConfigurationError(CodeforcesEditorialError):
-    """Configuration or settings error."""
 
     pass
 

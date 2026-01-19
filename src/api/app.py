@@ -3,7 +3,6 @@ from litestar.middleware.rate_limit import RateLimitConfig
 from litestar.openapi.config import OpenAPIConfig
 from litestar.stores.redis import RedisStore
 from litestar.stores.memory import MemoryStore
-import asyncio
 from loguru import logger
 
 from config import get_settings

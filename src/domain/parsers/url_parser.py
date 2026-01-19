@@ -59,31 +59,3 @@ class URLParser:
         logger.debug(f"Built problem URL: {url}")
         return url
 
-    @classmethod
-    def build_contest_url(cls, identifier: ProblemIdentifier) -> str:
-        """
-        Build contest main page URL from identifier.
-        """
-
-        url = f"https://codeforces.com/contest/{identifier.contest_id}"
-
-        logger.debug(f"Built contest URL: {url}")
-        return url
-
-    @classmethod
-    def validate_url(cls, url: str) -> bool:
-        """
-        Check if URL is a valid Codeforces problem URL.
-        """
-        try:
-            cls.parse(url)
-            return True
-        except URLParsingError:
-            return False
-
-
-def parse_problem_url(url: str) -> ProblemIdentifier:
-    """
-    Convenience function to parse problem URL.
-    """
-    return URLParser.parse(url)
