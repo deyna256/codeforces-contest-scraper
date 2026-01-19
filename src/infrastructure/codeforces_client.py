@@ -22,20 +22,19 @@ class CodeforcesApiClient:
 
         logger.debug(f"Fetching problemset from: {url}")
 
-        async with self.http_client:
-            response = await self.http_client.get(url)
+        response = await self.http_client.get(url)
 
-            try:
-                data = response.json()
-                if data.get("status") != "OK":
-                    logger.error(f"Codeforces API returned status: {data.get('status')}")
-                    raise NetworkError(f"Codeforces API error: {data.get('status')}")
+        try:
+            data = response.json()
+        except Exception as e:
+            logger.error(f"Failed to parse Codeforces API response: {e}")
+            raise NetworkError(f"Invalid response from Codeforces API: {e}")
 
-                return data
+        if data.get("status") != "OK":
+            logger.error(f"Codeforces API returned status: {data.get('status')}")
+            raise NetworkError(f"Codeforces API error: {data.get('status')}")
 
-            except Exception as e:
-                logger.error(f"Failed to parse Codeforces API response: {e}")
-                raise NetworkError(f"Invalid response from Codeforces API: {e}")
+        return data
 
     async def get_problem_details(self, contest_id: str, problem_id: str) -> dict:
         """Get detailed information about a specific problem."""
@@ -47,8 +46,7 @@ class CodeforcesApiClient:
 
         # Find the specific problem
         for problem in problems:
-            if (str(problem.get("contestId")) == contest_id and
-                problem.get("index") == problem_id):
+            if str(problem.get("contestId")) == contest_id and problem.get("index") == problem_id:
                 return problem
 
         # If not found, try to get contest information for additional context
@@ -59,10 +57,7 @@ class CodeforcesApiClient:
         """Get Problem domain model for given identifier."""
         logger.info(f"Getting problem: {identifier}")
 
-        problem_data = await self.get_problem_details(
-            identifier.contest_id,
-            identifier.problem_id
-        )
+        problem_data = await self.get_problem_details(identifier.contest_id, identifier.problem_id)
 
         # Map Codeforces API response to our Problem model
         problem = Problem(

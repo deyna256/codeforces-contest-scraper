@@ -21,6 +21,7 @@ class ProblemController(Controller):
         - url: Codeforces problem URL (e.g., "https://codeforces.com/problemset/problem/2190/B2")
         """
         logger.info(f"API request for problem URL: {data.url}")
+        logger.info("Processing problem request with hot-reload test")
 
         service = ProblemService()
         problem = await service.get_problem_by_url(data.url)
@@ -32,4 +33,7 @@ class ProblemController(Controller):
             contest_id=problem.contest_id,
             id=problem.id,
             url=data.url,
+            description=problem.description,
+            time_limit=problem.time_limit,
+            memory_limit=problem.memory_limit,
         )
