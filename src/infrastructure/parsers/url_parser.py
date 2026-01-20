@@ -5,11 +5,17 @@ from urllib.parse import urlparse
 
 from loguru import logger
 
-from domain.models import ProblemIdentifier
-from domain.exceptions import URLParsingError
+from domain.models.identifiers import ProblemIdentifier
+from .interfaces import URLParserProtocol
 
 
-class URLParser:
+class URLParsingError(ValueError):
+    """Invalid URL format or unable to parse URL."""
+
+    pass
+
+
+class URLParser(URLParserProtocol):
     """Parser for various Codeforces URL formats."""
 
     # Unified pattern matches: problemset/problem/1234/A

@@ -2,8 +2,9 @@
 
 from loguru import logger
 
-from domain.exceptions import NetworkError, ProblemNotFoundError
-from domain.models import ProblemIdentifier, Problem
+from infrastructure.errors import NetworkError, ProblemNotFoundError
+from domain.models.identifiers import ProblemIdentifier
+from domain.models.problem import Problem
 from infrastructure.http_client import AsyncHTTPClient
 
 

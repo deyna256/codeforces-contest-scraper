@@ -11,7 +11,7 @@ from tenacity import (
 )
 
 from config import get_settings
-from domain.exceptions import NetworkError, ProblemNotFoundError
+from infrastructure.errors import NetworkError, ProblemNotFoundError
 
 
 class AsyncHTTPClient:

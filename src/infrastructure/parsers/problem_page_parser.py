@@ -1,20 +1,23 @@
-"""Parser for Codeforces problem pages."""
+"""Parser for extracting problem data from HTML pages."""
 
 from typing import Optional, TYPE_CHECKING
 
 from bs4 import BeautifulSoup
 from loguru import logger
 
-from domain.models import ProblemData, ProblemIdentifier
-from domain.exceptions import ParsingError
-from domain.parsers.url_parser import URLParser
+from domain.models.identifiers import ProblemIdentifier
+from domain.models.parsing import ProblemData
+
+from .interfaces import ParsingError
+
+from .interfaces import ProblemPageParserProtocol
 
 if TYPE_CHECKING:
     from infrastructure.http_client import AsyncHTTPClient
 
 
-class ProblemPageParser:
-    """Parser for extracting data from Codeforces problem pages."""
+class ProblemPageParser(ProblemPageParserProtocol):
+    """Parser for extracting data from Codeforces problem HTML pages."""
 
     def __init__(self, http_client: Optional["AsyncHTTPClient"] = None):
         """
@@ -29,6 +32,8 @@ class ProblemPageParser:
         """
         Parse problem page and extract data.
         """
+        from infrastructure.parsers import URLParser
+
         url = URLParser.build_problem_url(identifier)
         logger.info(f"Parsing problem page: {url}")
 

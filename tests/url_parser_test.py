@@ -1,8 +1,8 @@
 import pytest
 
-from domain.parsers.url_parser import URLParser
-from domain.models import ProblemIdentifier
-from domain.exceptions import URLParsingError
+from infrastructure.parsers import URLParser
+from domain.models.identifiers import ProblemIdentifier
+from infrastructure.parsers import URLParsingError
 
 
 @pytest.mark.parametrize(

@@ -3,7 +3,7 @@ from litestar.status_codes import HTTP_200_OK
 from loguru import logger
 
 from api.schemas import ProblemRequest, ProblemResponse
-from services.problem import ProblemService
+from services import create_problem_service
 
 
 class ProblemController(Controller):
@@ -23,7 +23,7 @@ class ProblemController(Controller):
         logger.info(f"API request for problem URL: {data.url}")
         logger.info("Processing problem request with hot-reload test")
 
-        service = ProblemService()
+        service = create_problem_service()
         problem = await service.get_problem_by_url(data.url)
 
         return ProblemResponse(

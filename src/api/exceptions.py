@@ -6,12 +6,8 @@ from litestar.status_codes import (
 )
 from loguru import logger
 
-from domain.exceptions import (
-    CodeforcesEditorialError,
-    URLParsingError,
-    ParsingError,
-    CacheError,
-)
+from infrastructure.errors import CodeforcesEditorialError, CacheError
+from infrastructure.parsers import URLParsingError, ParsingError
 from api.schemas import ErrorResponse
 
 

@@ -2,9 +2,9 @@ import pytest
 
 from unittest.mock import AsyncMock
 
-from domain.parsers.problem_page import ProblemPageParser
-from domain.models import ProblemIdentifier
-from domain.exceptions import ParsingError
+from infrastructure.parsers import ProblemPageParser
+from domain.models.identifiers import ProblemIdentifier
+from infrastructure.parsers import ParsingError
 
 
 REALISTIC_HTML = """

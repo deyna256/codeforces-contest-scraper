@@ -6,12 +6,8 @@ from litestar.stores.memory import MemoryStore
 from loguru import logger
 
 from config import get_settings
-from domain.exceptions import (
-    CodeforcesEditorialError,
-    URLParsingError,
-    ParsingError,
-    CacheError,
-)
+from infrastructure.errors import CodeforcesEditorialError, CacheError
+from infrastructure.parsers import URLParsingError, ParsingError
 from api.exceptions import exception_to_http_response
 from api.routes import CacheController, ProblemController
 

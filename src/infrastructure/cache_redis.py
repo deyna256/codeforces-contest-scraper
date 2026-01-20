@@ -6,7 +6,7 @@ import redis.asyncio as redis
 from loguru import logger
 
 from config import get_settings
-from domain.exceptions import CacheError
+from infrastructure.errors import CacheError
 
 
 class AsyncRedisCache:
