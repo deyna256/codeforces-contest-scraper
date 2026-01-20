@@ -1,6 +1,7 @@
 # src/domain/parsers/url_parser.py
 from domain.models.problem import ProblemIdentifier
 
+
 class URLParser:
     @staticmethod
     def parse(url: str) -> ProblemIdentifier:

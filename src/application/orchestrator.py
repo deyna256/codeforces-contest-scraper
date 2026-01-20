@@ -1,4 +1,5 @@
 """Async orchestrator for coordinating the editorial extraction process."""
+
 from loguru import logger
 
 from domain.models import Editorial, ProblemData
@@ -60,6 +61,4 @@ class AsyncEditorialOrchestrator:
             raise
         except Exception as e:
             logger.error(f"Unexpected error in orchestrator: {e}")
-            raise CodeforcesEditorialError(
-                f"Failed to get editorial: {e}"
-            ) from e
+            raise CodeforcesEditorialError(f"Failed to get editorial: {e}") from e

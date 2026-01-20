@@ -2,6 +2,7 @@
 from dataclasses import dataclass
 from domain.models.editorial import Editorial
 
+
 @dataclass
 class CachedEditorial:
     editorial: Editorial

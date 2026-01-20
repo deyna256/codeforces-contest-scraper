@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import List, Optional, Union
 
+
 @dataclass(frozen=True)
 class ProblemIdentifier:
     contest_id: int
