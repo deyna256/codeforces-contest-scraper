@@ -1,0 +1,21 @@
+[33m0473595[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32missue-32[m[33m, [m[1;31morigin/issue-32[m[33m)[m Remove unused import List in editorial.py
+[33m06fc4e8[m Fix domain models and typecheck issues
+[33me78bea8[m Fix unused import in tests
+[33m9b6498c[m Fix syntax error and typecheck issues
+[33m1988e2e[m Fix domain models and orchestrator to match main branch; make tests pass
+[33m41c88d2[m Fix broken test_http_error_handling method call
+[33m7ffa5d9[m Fix ProblemIdentifier, URL parser tests, and domain model imports
+[33ma3240d3[m Fix ProblemIdentifier model and URL parser tests
+[33m571b25c[m Fix: ProblemIdentifier & ProblemData updates, all tests passing
+[33m3aa3384[m Fix domain refactor fallout (tests, routes, cache key)
+[33m2233c91[m Fix models, routes, and tests after domain refactor
+[33mde5da5c[m Fix tests to match refactored ProblemData and ProblemIdentifier
+[33mce2a26d[m Fix ProblemIdentifier and ProblemData definitions, pass flake8 and mypy
+[33mc7f7294[m Fix tests and sync with main branch
+[33mc57925a[m Fix ProblemData model to match parser and tests
+[33md68d73d[m Add test_simple_models for domain models
+[33m381007a[m Refactor domain models into a modular package
+[33m1a15cf7[m Refactor domain models into a modular package
+[33m345a49e[m Remove redundant problem and tutorial metadata from CachedEditorial
+[33maa11bc8[m Fix CachedEditorial missing-argument error by adding optional fields
+[33m058db39[m Refactor CachedEditorial to remove redundant metadata
