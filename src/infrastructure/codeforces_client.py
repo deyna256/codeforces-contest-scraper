@@ -1,7 +1,5 @@
 """Codeforces API client for fetching problem data."""
 
-from loguru import logger
-
 from infrastructure.errors import ContestNotFoundError, NetworkError, ProblemNotFoundError
 from domain.models.identifiers import ProblemIdentifier
 from domain.models.problem import Problem
@@ -21,18 +19,14 @@ class CodeforcesApiClient:
         """Fetch all problems from Codeforces problemset."""
         url = f"{self.BASE_URL}/problemset.problems"
 
-        logger.debug(f"Fetching problemset from: {url}")
-
         response = await self.http_client.get(url)
 
         try:
             data = response.json()
         except Exception as e:
-            logger.error(f"Failed to parse Codeforces API response: {e}")
             raise NetworkError(f"Invalid response from Codeforces API: {e}")
 
         if data.get("status") != "OK":
-            logger.error(f"Codeforces API returned status: {data.get('status')}")
             raise NetworkError(f"Codeforces API error: {data.get('status')}")
 
         return data
@@ -41,30 +35,23 @@ class CodeforcesApiClient:
         """Fetch contest standings and problem list from Codeforces API."""
         url = f"{self.BASE_URL}/contest.standings?contestId={contest_id}&from=1&count=1"
 
-        logger.debug(f"Fetching contest standings from: {url}")
-
         response = await self.http_client.get(url)
 
         try:
             data = response.json()
         except Exception as e:
-            logger.error(f"Failed to parse Codeforces API response: {e}")
             raise NetworkError(f"Invalid response from Codeforces API: {e}")
 
         if data.get("status") != "OK":
             comment = data.get("comment", "")
             if "not found" in comment.lower():
-                logger.error(f"Contest {contest_id} not found")
                 raise ContestNotFoundError(f"Contest {contest_id} not found")
-            logger.error(f"Codeforces API returned status: {data.get('status')}")
             raise NetworkError(f"Codeforces API error: {data.get('status')}")
 
         return data
 
     async def get_problem_details(self, contest_id: str, problem_id: str) -> dict:
         """Get detailed information about a specific problem."""
-        logger.debug(f"Fetching problem details for {contest_id}/{problem_id}")
-
         # Fetch all problems and find the specific one
         problems_data = await self.fetch_problemset_problems()
         problems = problems_data.get("result", {}).get("problems", [])
@@ -75,13 +62,10 @@ class CodeforcesApiClient:
                 return problem
 
         # If not found, try to get contest information for additional context
-        logger.debug(f"Problem {contest_id}/{problem_id} not found in problemset")
         raise ProblemNotFoundError(f"Problem {contest_id}/{problem_id} not found")
 
     async def get_problem(self, identifier: ProblemIdentifier) -> Problem:
         """Get Problem domain model for given identifier."""
-        logger.debug(f"Getting problem: {identifier}")
-
         problem_data = await self.get_problem_details(identifier.contest_id, identifier.problem_id)
 
         # Map Codeforces API response to our Problem model

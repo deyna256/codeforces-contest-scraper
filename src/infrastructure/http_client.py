@@ -50,8 +50,6 @@ class AsyncHTTPClient:
 
         404 responses raise ProblemNotFoundError; other HTTP failures raise NetworkError.
         """
-        logger.debug(f"Fetching URL: {url}")
-
         try:
             # Use curl_cffi with Chrome 120 impersonation to bypass TLS fingerprinting
             response = await self.client.get(
@@ -63,14 +61,11 @@ class AsyncHTTPClient:
 
             # Check status code
             if response.status_code == 404:
-                logger.error(f"Resource not found: {url}")
                 raise ProblemNotFoundError(f"Resource not found: {url}")
 
             if response.status_code >= 400:
-                logger.error(f"HTTP error {response.status_code} for {url}")
                 raise NetworkError(f"HTTP error {response.status_code}: {url}")
 
-            logger.debug(f"Successfully fetched URL: {url} (status: {response.status_code})")
             return response
 
         except ProblemNotFoundError:
@@ -78,7 +73,6 @@ class AsyncHTTPClient:
         except NetworkError:
             raise
         except Exception as e:
-            logger.error(f"Unexpected error fetching {url}: {e}")
             raise NetworkError(f"Failed to fetch {url}: {e}") from e
 
     async def get_text(self, url: str) -> str:

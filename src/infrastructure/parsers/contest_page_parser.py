@@ -3,7 +3,6 @@
 from typing import TYPE_CHECKING, Optional
 
 from bs4 import BeautifulSoup
-from loguru import logger
 
 from domain.models.parsing import ContestPageData, ProblemData
 from domain.models.identifiers import ProblemIdentifier
@@ -41,7 +40,6 @@ class ContestPageParser:
         from domain.models.identifiers import ContestIdentifier
 
         url = URLParser.build_contest_url(ContestIdentifier(contest_id=contest_id, is_gym=False))
-        logger.debug(f"Parsing contest page: {url}")
 
         if not self.http_client:
             raise ParsingError(f"HTTP client not initialized for {url}")
@@ -59,11 +57,9 @@ class ContestPageParser:
                 editorial_url=editorial_url,
             )
 
-            logger.debug(f"Successfully parsed contest: {contest_id}")
             return contest_data
 
         except Exception as e:
-            logger.error(f"Failed to parse contest page: {e}")
             raise ParsingError(f"Failed to parse contest page {url}: {e}") from e
 
     async def parse_problem_in_contest(self, contest_id: str, problem_id: str) -> ProblemData:
@@ -71,7 +67,6 @@ class ContestPageParser:
         Parse problem page within a contest and extract data.
         """
         url = f"https://codeforces.com/contest/{contest_id}/problem/{problem_id}"
-        logger.debug(f"Parsing problem page in contest: {url}")
 
         if not self.http_client:
             raise ParsingError(f"HTTP client not initialized for {url}")
@@ -98,11 +93,9 @@ class ContestPageParser:
                 memory_limit=memory_limit,
             )
 
-            logger.debug(f"Successfully parsed problem: {contest_id}/{problem_id}")
             return problem_data
 
         except Exception as e:
-            logger.error(f"Failed to parse problem page: {e}")
             raise ParsingError(f"Failed to parse problem page {url}: {e}") from e
 
     def _extract_contest_title(self, soup: BeautifulSoup) -> Optional[str]:
@@ -119,8 +112,7 @@ class ContestPageParser:
                 return title_text
 
             return None
-        except Exception as e:
-            logger.debug(f"Failed to extract contest title: {e}")
+        except Exception:
             return None
 
     async def _extract_editorial_url(self, soup: BeautifulSoup, contest_id: str) -> Optional[str]:
@@ -128,18 +120,14 @@ class ContestPageParser:
         try:
             # Try LLM-based detection first
             if self.llm_editorial_finder:
-                logger.debug("Attempting LLM-based editorial detection")
                 llm_url = await self.llm_editorial_finder.find_editorial_url(soup, contest_id)
                 if llm_url:
-                    logger.debug(f"LLM found editorial URL: {llm_url}")
                     return llm_url
-                logger.debug("LLM did not find editorial, falling back to regex")
 
             # Fallback to regex-based detection
             return self._extract_editorial_url_regex(soup, contest_id)
 
-        except Exception as e:
-            logger.debug(f"Failed to extract editorial URL: {e}")
+        except Exception:
             return None
 
     def _extract_editorial_url_regex(self, soup: BeautifulSoup, contest_id: str) -> Optional[str]:
@@ -178,11 +166,9 @@ class ContestPageParser:
                             return f"https://codeforces.com{href}"
                         return href
 
-            logger.debug(f"No editorial URL found for contest {contest_id}")
             return None
 
-        except Exception as e:
-            logger.debug(f"Failed to extract editorial URL with regex: {e}")
+        except Exception:
             return None
 
     def _extract_time_limit(self, soup: BeautifulSoup) -> Optional[str]:
@@ -204,8 +190,7 @@ class ContestPageParser:
                 return text
 
             return None
-        except Exception as e:
-            logger.debug(f"Failed to extract time limit: {e}")
+        except Exception:
             return None
 
     def _extract_memory_limit(self, soup: BeautifulSoup) -> Optional[str]:
@@ -227,8 +212,7 @@ class ContestPageParser:
                 return text
 
             return None
-        except Exception as e:
-            logger.debug(f"Failed to extract memory limit: {e}")
+        except Exception:
             return None
 
     def _extract_description(self, soup: BeautifulSoup) -> Optional[str]:
@@ -236,7 +220,6 @@ class ContestPageParser:
         try:
             problem_statement = soup.find("div", class_="problem-statement")
             if not problem_statement:
-                logger.debug("Problem statement block not found")
                 return None
 
             text_parts = []
@@ -270,6 +253,5 @@ class ContestPageParser:
 
             return problem_statement.get_text(separator="\n", strip=True)
 
-        except Exception as e:
-            logger.debug(f"Failed to extract description: {e}")
+        except Exception:
             return None
