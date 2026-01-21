@@ -2,7 +2,7 @@
 
 from loguru import logger
 
-from infrastructure.errors import NetworkError, ProblemNotFoundError
+from infrastructure.errors import ContestNotFoundError, NetworkError, ProblemNotFoundError
 from domain.models.identifiers import ProblemIdentifier
 from domain.models.problem import Problem
 from infrastructure.http_client import AsyncHTTPClient
@@ -32,6 +32,30 @@ class CodeforcesApiClient:
             raise NetworkError(f"Invalid response from Codeforces API: {e}")
 
         if data.get("status") != "OK":
+            logger.error(f"Codeforces API returned status: {data.get('status')}")
+            raise NetworkError(f"Codeforces API error: {data.get('status')}")
+
+        return data
+
+    async def fetch_contest_standings(self, contest_id: str) -> dict:
+        """Fetch contest standings and problem list from Codeforces API."""
+        url = f"{self.BASE_URL}/contest.standings?contestId={contest_id}&from=1&count=1"
+
+        logger.debug(f"Fetching contest standings from: {url}")
+
+        response = await self.http_client.get(url)
+
+        try:
+            data = response.json()
+        except Exception as e:
+            logger.error(f"Failed to parse Codeforces API response: {e}")
+            raise NetworkError(f"Invalid response from Codeforces API: {e}")
+
+        if data.get("status") != "OK":
+            comment = data.get("comment", "")
+            if "not found" in comment.lower():
+                logger.error(f"Contest {contest_id} not found")
+                raise ContestNotFoundError(f"Contest {contest_id} not found")
             logger.error(f"Codeforces API returned status: {data.get('status')}")
             raise NetworkError(f"Codeforces API error: {data.get('status')}")
 

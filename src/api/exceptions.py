@@ -1,13 +1,19 @@
 from litestar import Request, Response
 from litestar.status_codes import (
     HTTP_400_BAD_REQUEST,
+    HTTP_404_NOT_FOUND,
     HTTP_422_UNPROCESSABLE_ENTITY,
     HTTP_500_INTERNAL_SERVER_ERROR,
 )
 from loguru import logger
 
-from infrastructure.errors import CodeforcesEditorialError, CacheError
-from infrastructure.parsers import URLParsingError, ParsingError
+from infrastructure.errors import (
+    CacheError,
+    CodeforcesEditorialError,
+    ContestNotFoundError,
+    GymContestError,
+)
+from infrastructure.parsers import ParsingError, URLParsingError
 from api.schemas import ErrorResponse
 
 
@@ -17,6 +23,16 @@ def exception_to_http_response(request: Request, exc: Exception) -> Response[Err
     if isinstance(exc, URLParsingError):
         status_code = HTTP_400_BAD_REQUEST
         error_type = "URLParsingError"
+        detail = str(exc)
+
+    elif isinstance(exc, GymContestError):
+        status_code = HTTP_400_BAD_REQUEST
+        error_type = "GymContestError"
+        detail = str(exc)
+
+    elif isinstance(exc, ContestNotFoundError):
+        status_code = HTTP_404_NOT_FOUND
+        error_type = "ContestNotFoundError"
         detail = str(exc)
 
     elif isinstance(exc, ParsingError):

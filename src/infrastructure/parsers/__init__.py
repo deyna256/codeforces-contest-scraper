@@ -1,31 +1,30 @@
 """Parsers for extracting data from external sources."""
 
+from .contest_page_parser import ContestPageParser
+from .llm_editorial_finder import LLMEditorialFinder
 from .problem_page_parser import ProblemPageParser
 from .url_parser import URLParser, URLParsingError
 from .interfaces import (
-    URLParserProtocol,
-    ProblemPageParserProtocol,
     APIClientProtocol,
+    ContestAPIClientProtocol,
+    ContestPageParserProtocol,
     HTTPClientProtocol,
     ParsingError,
+    ProblemPageParserProtocol,
+    URLParserProtocol,
 )
 
 __all__ = [
-    "ProblemPageParser",
-    "URLParser",
-    "URLParsingError",
+    "APIClientProtocol",
+    "ContestAPIClientProtocol",
+    "ContestPageParser",
+    "ContestPageParserProtocol",
+    "HTTPClientProtocol",
+    "LLMEditorialFinder",
     "ParsingError",
-    "URLParserProtocol",
-    "ProblemPageParserProtocol",
-    "APIClientProtocol",
-    "HTTPClientProtocol",
-]
-
-__all__ = [
     "ProblemPageParser",
+    "ProblemPageParserProtocol",
     "URLParser",
     "URLParserProtocol",
-    "ProblemPageParserProtocol",
-    "APIClientProtocol",
-    "HTTPClientProtocol",
+    "URLParsingError",
 ]

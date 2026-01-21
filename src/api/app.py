@@ -6,10 +6,15 @@ from litestar.stores.memory import MemoryStore
 from loguru import logger
 
 from config import get_settings
-from infrastructure.errors import CodeforcesEditorialError, CacheError
-from infrastructure.parsers import URLParsingError, ParsingError
+from infrastructure.errors import (
+    CacheError,
+    CodeforcesEditorialError,
+    ContestNotFoundError,
+    GymContestError,
+)
+from infrastructure.parsers import ParsingError, URLParsingError
 from api.exceptions import exception_to_http_response
-from api.routes import CacheController, ProblemController
+from api.routes import CacheController, ContestController, ProblemController
 
 
 def create_app() -> Litestar:
@@ -39,10 +44,12 @@ def create_app() -> Litestar:
         logger.info("Using in-memory storage without rate limiting")
 
     exception_handlers = {
-        CodeforcesEditorialError: exception_to_http_response,
-        URLParsingError: exception_to_http_response,
-        ParsingError: exception_to_http_response,
         CacheError: exception_to_http_response,
+        CodeforcesEditorialError: exception_to_http_response,
+        ContestNotFoundError: exception_to_http_response,
+        GymContestError: exception_to_http_response,
+        ParsingError: exception_to_http_response,
+        URLParsingError: exception_to_http_response,
     }
 
     openapi_config = OpenAPIConfig(
@@ -52,7 +59,7 @@ def create_app() -> Litestar:
     )
 
     app = Litestar(
-        route_handlers=[CacheController, ProblemController],
+        route_handlers=[CacheController, ContestController, ProblemController],
         stores=stores,
         middleware=middleware,
         exception_handlers=exception_handlers,

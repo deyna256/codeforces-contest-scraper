@@ -29,6 +29,23 @@ class Settings(BaseSettings):
         default=None, description="Log file path (None for stdout only)"
     )
 
+    # LLM (OpenRouter)
+    openrouter_api_key: Optional[str] = Field(
+        default=None, description="OpenRouter API key for LLM-based editorial detection"
+    )
+    openrouter_model: str = Field(
+        default="anthropic/claude-3.5-haiku",
+        description="OpenRouter model to use for editorial detection",
+    )
+    openrouter_base_url: str = Field(
+        default="https://openrouter.ai/api/v1",
+        description="OpenRouter API base URL",
+    )
+    llm_enabled: bool = Field(
+        default=True,
+        description="Enable LLM-based editorial detection (fallback to regex if disabled or fails)",
+    )
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

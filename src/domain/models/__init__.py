@@ -1,11 +1,16 @@
 """Domain models package."""
 
-from .identifiers import ProblemIdentifier
+from .contest import Contest, ContestProblem
+from .identifiers import ContestIdentifier, ProblemIdentifier
+from .parsing import ContestPageData, ProblemData
 from .problem import Problem
-from .parsing import ProblemData
 
 __all__ = [
-    "ProblemIdentifier",
+    "Contest",
+    "ContestIdentifier",
+    "ContestPageData",
+    "ContestProblem",
     "Problem",
     "ProblemData",
+    "ProblemIdentifier",
 ]

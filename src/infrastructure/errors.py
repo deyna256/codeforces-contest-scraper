@@ -19,6 +19,18 @@ class ProblemNotFoundError(CodeforcesEditorialError):
     pass
 
 
+class ContestNotFoundError(CodeforcesEditorialError):
+    """Contest not found (404) or inaccessible."""
+
+    pass
+
+
+class GymContestError(CodeforcesEditorialError):
+    """Gym contests are not supported."""
+
+    pass
+
+
 class CacheError(CodeforcesEditorialError):
     """Cache operation error."""
 

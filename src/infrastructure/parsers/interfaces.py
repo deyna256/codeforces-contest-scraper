@@ -2,7 +2,7 @@
 
 from typing import Protocol
 
-from domain.models import ProblemData, ProblemIdentifier
+from domain.models import ContestPageData, ProblemData, ProblemIdentifier
 from domain.models.problem import Problem
 
 
@@ -47,4 +47,28 @@ class HTTPClientProtocol(Protocol):
 
     async def get_text(self, url: str) -> str:
         """Get text content from URL."""
+        ...
+
+
+class ContestPageParserProtocol(Protocol):
+    """Protocol for parsing contest pages."""
+
+    async def parse_contest_page(self, contest_id: str) -> ContestPageData:
+        """Parse contest page and extract data."""
+        ...
+
+    async def parse_problem_in_contest(self, contest_id: str, problem_id: str) -> ProblemData:
+        """Parse problem page within a contest."""
+        ...
+
+
+class ContestAPIClientProtocol(Protocol):
+    """Protocol for Codeforces contest API client."""
+
+    async def fetch_contest_standings(self, contest_id: str) -> dict:
+        """Fetch contest standings from Codeforces API."""
+        ...
+
+    async def fetch_problemset_problems(self) -> dict:
+        """Fetch all problems from Codeforces problemset."""
         ...
