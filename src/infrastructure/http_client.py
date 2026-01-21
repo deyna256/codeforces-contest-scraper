@@ -3,7 +3,6 @@
 from typing import Optional
 
 from curl_cffi.requests import AsyncSession
-from loguru import logger
 from tenacity import (
     retry,
     stop_after_attempt,
@@ -36,9 +35,9 @@ class AsyncHTTPClient:
     async def close(self) -> None:
         try:
             await self.client.close()
-        except Exception as e:
-            logger.warning(f"Error during HTTP client cleanup: {e}")
+        except Exception:
             # Ignore cleanup errors to prevent breaking dependency injection
+            pass
 
     @retry(
         stop=stop_after_attempt(3),

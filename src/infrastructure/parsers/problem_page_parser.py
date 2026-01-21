@@ -35,7 +35,7 @@ class ProblemPageParser(ProblemPageParserProtocol):
         from infrastructure.parsers import URLParser
 
         url = URLParser.build_problem_url(identifier)
-        logger.info(f"Parsing problem page: {url}")
+        logger.debug(f"Parsing problem page: {url}")
 
         if not self.http_client:
             raise ParsingError(f"HTTP client not initialized for {url}")
@@ -56,7 +56,7 @@ class ProblemPageParser(ProblemPageParserProtocol):
                 memory_limit=memory_limit,
             )
 
-            logger.info(f"Successfully parsed problem: {identifier}")
+            logger.debug(f"Successfully parsed problem: {identifier}")
             return problem_data
 
         except Exception as e:
@@ -85,7 +85,7 @@ class ProblemPageParser(ProblemPageParserProtocol):
 
             return None
         except Exception as e:
-            logger.warning(f"Failed to extract time limit: {e}")
+            logger.debug(f"Failed to extract time limit: {e}")
             return None
 
     def _extract_memory_limit(self, soup: BeautifulSoup) -> Optional[str]:
@@ -110,7 +110,7 @@ class ProblemPageParser(ProblemPageParserProtocol):
 
             return None
         except Exception as e:
-            logger.warning(f"Failed to extract memory limit: {e}")
+            logger.debug(f"Failed to extract memory limit: {e}")
             return None
 
     def _extract_description(self, soup: BeautifulSoup) -> Optional[str]:
@@ -119,7 +119,7 @@ class ProblemPageParser(ProblemPageParserProtocol):
             # Find the problem statement block
             problem_statement = soup.find("div", class_="problem-statement")
             if not problem_statement:
-                logger.warning("Problem statement block not found")
+                logger.debug("Problem statement block not found")
                 return None
 
             # Extract all text from the problem statement, preserving structure
@@ -158,5 +158,5 @@ class ProblemPageParser(ProblemPageParserProtocol):
             return problem_statement.get_text(separator="\n", strip=True)
 
         except Exception as e:
-            logger.warning(f"Failed to extract description: {e}")
+            logger.debug(f"Failed to extract description: {e}")
             return None

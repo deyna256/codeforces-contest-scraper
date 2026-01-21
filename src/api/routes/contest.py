@@ -20,7 +20,7 @@ class ContestController(Controller):
         Request body:
         - url: Codeforces contest URL (e.g., "https://codeforces.com/contest/2191")
         """
-        logger.info(f"API request for contest URL: {data.url}")
+        logger.debug(f"API request for contest URL: {data.url}")
 
         service = create_contest_service()
         contest = await service.get_contest_by_url(data.url)

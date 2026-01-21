@@ -34,7 +34,7 @@ class ContestService:
 
     async def get_contest(self, contest_id: str) -> Contest:
         """Get contest details using Codeforces API and page parser."""
-        logger.info(f"Getting contest via service: {contest_id}")
+        logger.debug(f"Getting contest via service: {contest_id}")
 
         # Fetch contest standings from API
         standings_data = await self.api_client.fetch_contest_standings(contest_id)
@@ -67,14 +67,14 @@ class ContestService:
         try:
             contest_page_data = await self.page_parser.parse_contest_page(contest_id)
         except Exception as e:
-            logger.warning(f"Failed to parse contest page: {e}")
+            logger.debug(f"Failed to parse contest page: {e}")
             # Continue without editorial URL
 
         editorial_url = contest_page_data.editorial_url if contest_page_data else None
         editorial_available = editorial_url is not None
 
         # Parse each problem page for description and limits (in parallel)
-        logger.info(f"Parsing {len(problems_list)} problems in parallel")
+        logger.debug(f"Parsing {len(problems_list)} problems in parallel")
         problem_tasks = []
         for problem_data in problems_list:
             problem_id = problem_data.get("index")
@@ -88,7 +88,7 @@ class ContestService:
         contest_problems = []
         for result in problem_results:
             if isinstance(result, Exception):
-                logger.warning(f"Problem parsing failed: {result}")
+                logger.debug(f"Problem parsing failed: {result}")
                 continue
             if result is not None:
                 contest_problems.append(result)
@@ -102,7 +102,7 @@ class ContestService:
             tutorial_url=editorial_url,
         )
 
-        logger.info(
+        logger.debug(
             f"Successfully created contest {contest_id} with {len(contest_problems)} problems"
         )
         return contest
@@ -132,7 +132,7 @@ class ContestService:
                     contest_id, problem_id
                 )
             except Exception as e:
-                logger.warning(f"Failed to parse problem page {contest_id}/{problem_id}: {e}")
+                logger.debug(f"Failed to parse problem page {contest_id}/{problem_id}: {e}")
                 # Continue without description/limits
 
             description = problem_page_data.description if problem_page_data else None
@@ -160,7 +160,7 @@ class ContestService:
 
     async def get_contest_by_url(self, url: str) -> Contest:
         """Get contest by Codeforces contest URL."""
-        logger.info(f"Getting contest by URL: {url}")
+        logger.debug(f"Getting contest by URL: {url}")
 
         # Parse URL to get identifier
         identifier = self.url_parser.parse_contest_url(url)

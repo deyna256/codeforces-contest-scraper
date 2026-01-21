@@ -75,12 +75,12 @@ class CodeforcesApiClient:
                 return problem
 
         # If not found, try to get contest information for additional context
-        logger.warning(f"Problem {contest_id}/{problem_id} not found in problemset")
+        logger.debug(f"Problem {contest_id}/{problem_id} not found in problemset")
         raise ProblemNotFoundError(f"Problem {contest_id}/{problem_id} not found")
 
     async def get_problem(self, identifier: ProblemIdentifier) -> Problem:
         """Get Problem domain model for given identifier."""
-        logger.info(f"Getting problem: {identifier}")
+        logger.debug(f"Getting problem: {identifier}")
 
         problem_data = await self.get_problem_details(identifier.contest_id, identifier.problem_id)
 

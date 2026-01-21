@@ -29,7 +29,7 @@ class ProblemService:
 
     async def get_problem(self, identifier: ProblemIdentifier) -> Problem:
         """Get problem details using Codeforces API and page parser."""
-        logger.info(f"Getting problem via service: {identifier}")
+        logger.debug(f"Getting problem via service: {identifier}")
 
         # Get basic info from Codeforces API
         problem = await self.api_client.get_problem(identifier)
@@ -41,14 +41,14 @@ class ProblemService:
             problem.time_limit = problem_data.time_limit
             problem.memory_limit = problem_data.memory_limit
         except Exception as e:
-            logger.warning(f"Failed to parse problem page data: {e}")
+            logger.debug(f"Failed to parse problem page data: {e}")
             # Continue without description/limits - they're optional
 
         return problem
 
     async def get_problem_by_url(self, url: str) -> Problem:
         """Get problem by Codeforces problem URL."""
-        logger.info(f"Getting problem by URL: {url}")
+        logger.debug(f"Getting problem by URL: {url}")
 
         # Parse URL to get identifier
         identifier = self.url_parser.parse(url)

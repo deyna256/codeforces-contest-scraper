@@ -20,8 +20,7 @@ class ProblemController(Controller):
         Request body:
         - url: Codeforces problem URL (e.g., "https://codeforces.com/problemset/problem/2190/B2")
         """
-        logger.info(f"API request for problem URL: {data.url}")
-        logger.info("Processing problem request with hot-reload test")
+        logger.debug(f"API request for problem URL: {data.url}")
 
         service = create_problem_service()
         problem = await service.get_problem_by_url(data.url)

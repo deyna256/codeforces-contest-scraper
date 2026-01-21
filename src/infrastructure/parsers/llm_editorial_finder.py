@@ -49,10 +49,10 @@ class LLMEditorialFinder:
             return editorial_url
 
         except LLMError as e:
-            logger.warning(f"LLM editorial detection failed: {e}")
+            logger.debug(f"LLM editorial detection failed: {e}")
             return None
         except Exception as e:
-            logger.warning(f"Unexpected error in LLM editorial detection: {e}")
+            logger.error(f"Unexpected error in LLM editorial detection: {e}")
             return None
 
     def _extract_links(self, soup: BeautifulSoup) -> list[dict[str, str]]:
@@ -180,15 +180,15 @@ Which link is the editorial/tutorial? Respond with JSON only."""
             editorial_url = result.get("url")
 
             if editorial_url:
-                logger.info(f"LLM identified editorial URL: {editorial_url}")
+                logger.debug(f"LLM identified editorial URL: {editorial_url}")
                 return editorial_url
             else:
                 logger.debug("LLM did not find editorial URL")
                 return None
 
         except json.JSONDecodeError as e:
-            logger.warning(f"Failed to parse LLM response as JSON: {e}, response: {response}")
+            logger.debug(f"Failed to parse LLM response as JSON: {e}")
             return None
         except Exception as e:
-            logger.warning(f"Error asking LLM for editorial: {e}")
+            logger.error(f"Error asking LLM for editorial: {e}")
             return None

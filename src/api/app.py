@@ -23,7 +23,6 @@ def create_app() -> Litestar:
     # Try to connect to Redis, fallback to memory store if not available
     stores = {}
     middleware = []
-    use_redis = False
 
     try:
         redis_store = RedisStore.with_client(url=settings.redis_url)
@@ -34,14 +33,10 @@ def create_app() -> Litestar:
             exclude=["/schema"],
         )
         middleware.append(rate_limit_config.middleware)
-        use_redis = True
-        logger.info("Redis connected successfully")
 
     except Exception as e:
-        logger.warning(f"Redis not available, falling back to in-memory storage: {e}")
+        logger.debug(f"Redis not available, falling back to in-memory storage: {e}")
         stores["memory"] = MemoryStore()
-        # No rate limiting in fallback mode
-        logger.info("Using in-memory storage without rate limiting")
 
     exception_handlers = {
         CacheError: exception_to_http_response,
@@ -66,9 +61,6 @@ def create_app() -> Litestar:
         debug=settings.log_level == "DEBUG",
         openapi_config=openapi_config,
     )
-
-    logger.info("LiteStar application created")
-    logger.info(f"Redis available: {use_redis}")
 
     return app
 
