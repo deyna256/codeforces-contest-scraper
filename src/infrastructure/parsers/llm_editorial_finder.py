@@ -21,7 +21,7 @@ class LLMEditorialFinder:
         """
         self.llm_client = llm_client
 
-    async def find_editorial_url(self, soup: BeautifulSoup, contest_id: str) -> Optional[str]:
+    async def find_editorial_url(self, soup: BeautifulSoup, contest_id: str) -> list[str]:
         """
         Find editorial URL using LLM.
 
@@ -42,18 +42,18 @@ class LLMEditorialFinder:
 
             if not links:
                 logger.debug("No links found on contest page")
-                return None
+                return []
 
             # Use LLM to identify editorial link
-            editorial_url = await self._ask_llm_for_editorial(links, contest_id)
-            return editorial_url
+            editorial_urls = await self._ask_llm_for_editorial(links, contest_id)
+            return editorial_urls
 
         except LLMError as e:
             logger.debug(f"LLM editorial detection failed: {e}")
-            return None
+            return []
         except Exception as e:
             logger.error(f"Unexpected error in LLM editorial detection: {e}")
-            return None
+            return []
 
     def _extract_links(self, soup: BeautifulSoup) -> list[dict[str, str]]:
         """
@@ -73,6 +73,8 @@ class LLMEditorialFinder:
             soup,  # Fallback to entire page
         ]
 
+        all_extracted_links = []
+
         for area in search_areas:
             if area is None:
                 continue
@@ -81,6 +83,15 @@ class LLMEditorialFinder:
                 href = link["href"]
                 if not isinstance(href, str):
                     continue
+
+                text = link.get_text(strip=True)
+                all_extracted_links.append(
+                    {
+                        "href": href,
+                        "text": text,
+                        "potential": self._is_potentially_editorial_link(href),
+                    }
+                )
 
                 # Skip non-blog links and common UI elements
                 if not self._is_potentially_editorial_link(href):
@@ -91,7 +102,6 @@ class LLMEditorialFinder:
                     continue
                 seen_urls.add(href)
 
-                text = link.get_text(strip=True)
                 if not text:
                     continue
 
@@ -102,7 +112,8 @@ class LLMEditorialFinder:
                 links.append({"url": href, "text": text})
 
         # Limit to first 20 most relevant links
-        return links[:20]
+        result = links[:20]
+        return result
 
     def _is_potentially_editorial_link(self, href: str) -> bool:
         """Check if link could potentially be an editorial."""
@@ -147,13 +158,26 @@ class LLMEditorialFinder:
             [f"{i + 1}. [{link['text']}] - {link['url']}" for i, link in enumerate(links)]
         )
 
+        logger.debug(f"Sending {len(links)} links to LLM for contest {contest_id}")
+
         system_prompt = """You are an expert at analyzing Codeforces contest pages.
 Your task is to identify which link leads to the editorial/tutorial for the contest.
 
-Editorial links typically:
-- Have text like "Tutorial", "Editorial", "Analysis", "Разбор задач" (Russian for "Problem analysis")
+Editorial/Solution links typically:
+- Have text like "Tutorial", "Editorial", "Analysis", "Solutions", "Разбор задач", "Разбор" (Russian for "analysis", "solutions")
+- Do NOT have text like "Announcement", "Registration", "Rules", "Timetable", or other meta-contest information
 - Point to /blog/entry/ URLs
 - Are posted by contest authors or coordinators
+- Are typically posted AFTER the contest ends (not as announcements before)
+
+Common editorial patterns:
+- "Tutorial", "Editorial", "Analysis", "Solutions"
+- "Разбор задач", "Разбор", "Решения" (Russian)
+- Task-specific editorials: "Tutorial for A+B+C" etc.
+
+Common non-editorial patterns to AVOID:
+- "Announcement", "Registration", "Rules", "Problems", "Results"
+- "Цуцсивцив", "Объявление", "Регистрация" (Russian)
 
 Respond ONLY with a JSON object in this format:
 {"url": "the_editorial_url"} if found, or {"url": null} if no editorial link exists.
@@ -167,6 +191,8 @@ Available links:
 
 Which link is the editorial/tutorial? Respond with JSON only."""
 
+        logger.debug(f"LLM prompt for contest {contest_id}: {user_prompt}")
+
         try:
             response = await self.llm_client.complete(
                 prompt=user_prompt,
@@ -175,16 +201,18 @@ Which link is the editorial/tutorial? Respond with JSON only."""
                 max_tokens=100,  # Short response expected
             )
 
+            logger.debug(f"LLM raw response for contest {contest_id}: {response}")
+
             # Parse JSON response
             result = json.loads(response)
             editorial_url = result.get("url")
 
             if editorial_url:
                 logger.debug(f"LLM identified editorial URL: {editorial_url}")
-                return editorial_url
+                return [editorial_url]
             else:
                 logger.debug("LLM did not find editorial URL")
-                return None
+                return []
 
         except json.JSONDecodeError as e:
             logger.debug(f"Failed to parse LLM response as JSON: {e}")

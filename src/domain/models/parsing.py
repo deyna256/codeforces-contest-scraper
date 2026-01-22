@@ -1,6 +1,6 @@
 """Value objects for parsed data."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from .identifiers import ProblemIdentifier
 
@@ -21,4 +21,4 @@ class ContestPageData:
 
     contest_id: str
     title: str | None = None
-    editorial_url: str | None = None
+    editorial_urls: list[str] = field(default_factory=list)

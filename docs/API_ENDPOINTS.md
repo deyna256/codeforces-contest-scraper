@@ -30,8 +30,7 @@ Fetch complete contest information including all problems with their statements,
 {
   "contest_id": "2191",
   "title": "Codeforces Round 1073 (Div. 2)",
-  "editorial_available": true,
-  "tutorial_url": "https://codeforces.com/blog/entry/150256",
+  "editorials": ["https://codeforces.com/blog/entry/150256"],
   "problems": [
     {
       "contest_id": "2191",
@@ -151,8 +150,7 @@ curl -X DELETE http://localhost:9000/cache
 |-------|------|-------------|
 | `contest_id` | string | Contest ID (e.g., "2191") |
 | `title` | string | Contest title |
-| `editorial_available` | boolean | Whether editorial/tutorial is available |
-| `tutorial_url` | string \| null | URL to contest editorial/tutorial |
+| `editorials` | array[string] | Array of editorial/tutorial URLs (empty if none) |
 | `problems` | array | List of problems in the contest |
 
 ### Problem in Contest
@@ -265,7 +263,7 @@ contest = response.json()
 
 print(f"Contest: {contest['title']}")
 print(f"Problems: {len(contest['problems'])}")
-print(f"Editorial: {contest['tutorial_url']}")
+print(f"Editorials: {contest['editorials']}")
 ```
 
 ### JavaScript

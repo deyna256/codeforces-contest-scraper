@@ -24,5 +24,4 @@ class Contest:
     contest_id: str
     title: str
     problems: list[ContestProblem] = field(default_factory=list)
-    editorial_available: bool = False
-    tutorial_url: str | None = None
+    editorials: list[str] = field(default_factory=list)

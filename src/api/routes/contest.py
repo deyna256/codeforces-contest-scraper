@@ -44,6 +44,5 @@ class ContestController(Controller):
             contest_id=contest.contest_id,
             title=contest.title,
             problems=problem_responses,
-            editorial_available=contest.editorial_available,
-            tutorial_url=contest.tutorial_url,
+            editorials=contest.editorials,
         )

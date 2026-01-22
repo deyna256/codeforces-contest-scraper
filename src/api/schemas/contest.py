@@ -31,8 +31,7 @@ class ContestResponse(BaseModel):
     contest_id: str
     title: str
     problems: list[ContestProblemResponse]
-    editorial_available: bool
-    tutorial_url: str | None = None
+    editorials: list[str]
 
     class Config:
         from_attributes = True

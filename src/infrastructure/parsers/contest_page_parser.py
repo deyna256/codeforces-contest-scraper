@@ -3,6 +3,7 @@
 from typing import TYPE_CHECKING, Optional
 
 from bs4 import BeautifulSoup
+from loguru import logger
 
 from domain.models.parsing import ContestPageData, ProblemData
 from domain.models.identifiers import ProblemIdentifier
@@ -49,12 +50,12 @@ class ContestPageParser:
             soup = BeautifulSoup(html, "lxml")
 
             title = self._extract_contest_title(soup)
-            editorial_url = await self._extract_editorial_url(soup, contest_id)
+            editorial_urls = await self._extract_editorial_url(soup, contest_id)
 
             contest_data = ContestPageData(
                 contest_id=contest_id,
                 title=title,
-                editorial_url=editorial_url,
+                editorial_urls=editorial_urls,
             )
 
             return contest_data
@@ -115,22 +116,33 @@ class ContestPageParser:
         except Exception:
             return None
 
-    async def _extract_editorial_url(self, soup: BeautifulSoup, contest_id: str) -> Optional[str]:
-        """Extract editorial/tutorial URL from contest page using LLM or fallback to regex."""
+    async def _extract_editorial_url(self, soup: BeautifulSoup, contest_id: str) -> list[str]:
+        """Extract editorial/tutorial URLs from contest page using LLM or fallback to regex."""
         try:
+            logger.debug(f"Starting editorial URL extraction for contest {contest_id}")
             # Try LLM-based detection first
             if self.llm_editorial_finder:
-                llm_url = await self.llm_editorial_finder.find_editorial_url(soup, contest_id)
-                if llm_url:
-                    return llm_url
-
+                logger.debug(f"Trying LLM-based editorial detection for contest {contest_id}")
+                llm_urls = await self.llm_editorial_finder.find_editorial_url(soup, contest_id)
+                if llm_urls:
+                    logger.debug(f"LLM found editorial URLs for contest {contest_id}: {llm_urls}")
+                    return llm_urls
+                else:
+                    logger.debug(
+                        f"LLM did not find editorials for contest {contest_id}, falling back to regex"
+                    )
+            else:
+                logger.debug("LLM client not available, using regex fallback")
             # Fallback to regex-based detection
-            return self._extract_editorial_url_regex(soup, contest_id)
+            regex_urls = self._extract_editorial_url_regex(soup, contest_id)
+            logger.debug(f"Regex found editorial URLs for contest {contest_id}: {regex_urls}")
+            return regex_urls
 
         except Exception:
-            return None
+            logger.exception(f"Error extracting editorial URLs for contest {contest_id}")
+            return []
 
-    def _extract_editorial_url_regex(self, soup: BeautifulSoup, contest_id: str) -> Optional[str]:
+    def _extract_editorial_url_regex(self, soup: BeautifulSoup, contest_id: str) -> list[str]:
         """Extract editorial URL using regex patterns (fallback method)."""
         try:
             # Look for editorial links in sidebar or main content
@@ -138,7 +150,9 @@ class ContestPageParser:
             # 1. Link with text containing "tutorial" or "editorial"
             # 2. Link in the sidebar to /blog/entry/...
 
-            # Search all links
+            editorial_urls = []
+
+            # Search all links on the page
             for link in soup.find_all("a", href=True):
                 href = link["href"]
                 if not isinstance(href, str):
@@ -146,30 +160,18 @@ class ContestPageParser:
                 link_text = link.get_text(strip=True).lower()
 
                 # Check if link text mentions tutorial/editorial (including Russian)
-                keywords = ["tutorial", "editorial", "разбор"]
+                keywords = ["tutorial", "editorial", "разбор", "analysis", "solution"]
                 if any(keyword in link_text for keyword in keywords):
                     # Convert relative URL to absolute
-                    if href.startswith("/"):
-                        return f"https://codeforces.com{href}"
-                    return href
+                    url = f"https://codeforces.com{href}" if href.startswith("/") else href
+                    if url not in editorial_urls:  # Avoid duplicates
+                        editorial_urls.append(url)
 
-            # Alternative: look for blog entry links in specific sections
-            sidebar = soup.find("div", id="sidebar")
-            if sidebar:
-                for link in sidebar.find_all("a", href=True):
-                    href = link["href"]
-                    if not isinstance(href, str):
-                        continue
-                    if "/blog/entry/" in href:
-                        # This might be the editorial
-                        if href.startswith("/"):
-                            return f"https://codeforces.com{href}"
-                        return href
-
-            return None
+            return editorial_urls
 
         except Exception:
-            return None
+            logger.exception(f"Error in regex editorial URL extraction for contest {contest_id}")
+            return []
 
     def _extract_time_limit(self, soup: BeautifulSoup) -> Optional[str]:
         """Extract time limit from problem page."""

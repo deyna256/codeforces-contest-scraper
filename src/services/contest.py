@@ -70,8 +70,7 @@ class ContestService:
             logger.debug(f"Failed to parse contest page: {e}")
             # Continue without editorial URL
 
-        editorial_url = contest_page_data.editorial_url if contest_page_data else None
-        editorial_available = editorial_url is not None
+        editorials = contest_page_data.editorial_urls if contest_page_data else []
 
         # Parse each problem page for description and limits (in parallel)
         logger.debug(f"Parsing {len(problems_list)} problems in parallel")
@@ -98,8 +97,7 @@ class ContestService:
             contest_id=contest_id,
             title=contest_title,
             problems=contest_problems,
-            editorial_available=editorial_available,
-            tutorial_url=editorial_url,
+            editorials=editorials,
         )
 
         logger.debug(
