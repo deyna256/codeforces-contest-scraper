@@ -158,8 +158,6 @@ class LLMEditorialFinder:
             [f"{i + 1}. [{link['text']}] - {link['url']}" for i, link in enumerate(links)]
         )
 
-        logger.debug(f"Sending {len(links)} links to LLM for contest {contest_id}")
-
         system_prompt = """You are an expert at analyzing Codeforces contest pages.
 Your task is to identify which link leads to the editorial/tutorial for the contest.
 
@@ -191,7 +189,9 @@ Available links:
 
 Which link is the editorial/tutorial? Respond with JSON only."""
 
-        logger.debug(f"LLM prompt for contest {contest_id}: {user_prompt}")
+        logger.debug(
+            f"Sending LLM request for contest {contest_id} with {len(links)} candidate links"
+        )
 
         try:
             response = await self.llm_client.complete(
@@ -201,17 +201,17 @@ Which link is the editorial/tutorial? Respond with JSON only."""
                 max_tokens=100,  # Short response expected
             )
 
-            logger.debug(f"LLM raw response for contest {contest_id}: {response}")
-
             # Parse JSON response
             result = json.loads(response)
             editorial_url = result.get("url")
 
             if editorial_url:
-                logger.debug(f"LLM identified editorial URL: {editorial_url}")
+                logger.info(
+                    f"LLM identified editorial URL for contest {contest_id}: {editorial_url}"
+                )
                 return [editorial_url]
             else:
-                logger.debug("LLM did not find editorial URL")
+                logger.debug(f"LLM did not find editorial URL for contest {contest_id}")
                 return []
 
         except json.JSONDecodeError as e:

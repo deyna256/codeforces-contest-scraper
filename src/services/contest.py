@@ -66,8 +66,8 @@ class ContestService:
         contest_page_data = None
         try:
             contest_page_data = await self.page_parser.parse_contest_page(contest_id)
-        except Exception as e:
-            logger.debug(f"Failed to parse contest page: {e}")
+        except Exception:
+            logger.warning(f"Failed to parse contest page for {contest_id}", exc_info=True)
             # Continue without editorial URL
 
         editorials = contest_page_data.editorial_urls if contest_page_data else []
@@ -85,12 +85,16 @@ class ContestService:
 
         # Filter out failed results and create ContestProblem objects
         contest_problems = []
+        failed_count = 0
         for result in problem_results:
             if isinstance(result, Exception):
-                logger.debug(f"Problem parsing failed: {result}")
+                failed_count += 1
                 continue
             if result is not None:
                 contest_problems.append(result)
+
+        if failed_count > 0:
+            logger.warning(f"Failed to parse {failed_count} problem(s) for contest {contest_id}")
 
         # Create Contest object
         contest = Contest(
@@ -100,8 +104,8 @@ class ContestService:
             editorials=editorials,
         )
 
-        logger.debug(
-            f"Successfully created contest {contest_id} with {len(contest_problems)} problems"
+        logger.info(
+            f"Successfully fetched contest {contest_id} with {len(contest_problems)} problems and {len(editorials)} editorial(s)"
         )
         return contest
 
@@ -129,8 +133,10 @@ class ContestService:
                 problem_page_data = await self.page_parser.parse_problem_in_contest(
                     contest_id, problem_id
                 )
-            except Exception as e:
-                logger.debug(f"Failed to parse problem page {contest_id}/{problem_id}: {e}")
+            except Exception:
+                logger.warning(
+                    f"Failed to parse problem page {contest_id}/{problem_id}", exc_info=True
+                )
                 # Continue without description/limits
 
             description = problem_page_data.description if problem_page_data else None
@@ -152,8 +158,10 @@ class ContestService:
             logger.debug(f"Successfully fetched problem {contest_id}/{problem_id}")
             return contest_problem
 
-        except Exception as e:
-            logger.error(f"Failed to fetch problem details for {contest_id}/{problem_id}: {e}")
+        except Exception:
+            logger.error(
+                f"Failed to fetch problem details for {contest_id}/{problem_id}", exc_info=True
+            )
             return None
 
     async def get_contest_by_url(self, url: str) -> Contest:

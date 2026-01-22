@@ -119,23 +119,19 @@ class ContestPageParser:
     async def _extract_editorial_url(self, soup: BeautifulSoup, contest_id: str) -> list[str]:
         """Extract editorial/tutorial URLs from contest page using LLM or fallback to regex."""
         try:
-            logger.debug(f"Starting editorial URL extraction for contest {contest_id}")
             # Try LLM-based detection first
             if self.llm_editorial_finder:
-                logger.debug(f"Trying LLM-based editorial detection for contest {contest_id}")
                 llm_urls = await self.llm_editorial_finder.find_editorial_url(soup, contest_id)
                 if llm_urls:
-                    logger.debug(f"LLM found editorial URLs for contest {contest_id}: {llm_urls}")
                     return llm_urls
-                else:
-                    logger.debug(
-                        f"LLM did not find editorials for contest {contest_id}, falling back to regex"
-                    )
-            else:
-                logger.debug("LLM client not available, using regex fallback")
+                logger.debug(f"LLM did not find editorials for contest {contest_id}, using regex")
+
             # Fallback to regex-based detection
             regex_urls = self._extract_editorial_url_regex(soup, contest_id)
-            logger.debug(f"Regex found editorial URLs for contest {contest_id}: {regex_urls}")
+            if regex_urls:
+                logger.info(
+                    f"Found {len(regex_urls)} editorial URL(s) for contest {contest_id} using regex"
+                )
             return regex_urls
 
         except Exception:

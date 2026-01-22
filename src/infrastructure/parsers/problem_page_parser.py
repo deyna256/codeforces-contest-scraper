@@ -60,7 +60,7 @@ class ProblemPageParser(ProblemPageParserProtocol):
             return problem_data
 
         except Exception as e:
-            logger.error(f"Failed to parse problem page: {e}")
+            logger.error(f"Failed to parse problem page for {identifier}", exc_info=True)
             raise ParsingError(f"Failed to parse problem page {url}: {e}") from e
 
     def _extract_time_limit(self, soup: BeautifulSoup) -> Optional[str]:
@@ -84,8 +84,7 @@ class ProblemPageParser(ProblemPageParserProtocol):
                 return text
 
             return None
-        except Exception as e:
-            logger.debug(f"Failed to extract time limit: {e}")
+        except Exception:
             return None
 
     def _extract_memory_limit(self, soup: BeautifulSoup) -> Optional[str]:
@@ -109,8 +108,7 @@ class ProblemPageParser(ProblemPageParserProtocol):
                 return text
 
             return None
-        except Exception as e:
-            logger.debug(f"Failed to extract memory limit: {e}")
+        except Exception:
             return None
 
     def _extract_description(self, soup: BeautifulSoup) -> Optional[str]:
@@ -119,7 +117,6 @@ class ProblemPageParser(ProblemPageParserProtocol):
             # Find the problem statement block
             problem_statement = soup.find("div", class_="problem-statement")
             if not problem_statement:
-                logger.debug("Problem statement block not found")
                 return None
 
             # Extract all text from the problem statement, preserving structure
@@ -157,6 +154,5 @@ class ProblemPageParser(ProblemPageParserProtocol):
             # Fallback: get all text from problem-statement
             return problem_statement.get_text(separator="\n", strip=True)
 
-        except Exception as e:
-            logger.debug(f"Failed to extract description: {e}")
+        except Exception:
             return None
