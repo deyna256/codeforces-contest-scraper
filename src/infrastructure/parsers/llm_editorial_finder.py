@@ -30,11 +30,11 @@ class LLMEditorialFinder:
             contest_id: Contest ID
 
         Returns:
-            Editorial URL if found, None otherwise
+            List of editorial URLs if found, empty list otherwise
         """
         if not self.llm_client:
             logger.debug("LLM client not available, skipping LLM editorial detection")
-            return None
+            return []
 
         try:
             # Extract all links from the page
@@ -139,7 +139,7 @@ class LLMEditorialFinder:
 
     async def _ask_llm_for_editorial(
         self, links: list[dict[str, str]], contest_id: str
-    ) -> Optional[str]:
+    ) -> list[str]:
         """
         Ask LLM to identify editorial URL from list of links.
 
@@ -148,10 +148,10 @@ class LLMEditorialFinder:
             contest_id: Contest ID for context
 
         Returns:
-            Editorial URL if found, None otherwise
+            List containing editorial URL if found, empty list otherwise
         """
         if not links or not self.llm_client:
-            return None
+            return []
 
         # Format links for LLM
         links_text = "\n".join(
@@ -216,7 +216,7 @@ Which link is the editorial/tutorial? Respond with JSON only."""
 
         except json.JSONDecodeError as e:
             logger.debug(f"Failed to parse LLM response as JSON: {e}")
-            return None
+            return []
         except Exception as e:
             logger.error(f"Error asking LLM for editorial: {e}")
-            return None
+            return []
