@@ -1,6 +1,6 @@
 """Benchmark configuration for LLM models."""
 
-from typing import TypedDict
+from typing import TypedDict, Optional
 
 
 class ModelConfig(TypedDict):
@@ -49,8 +49,8 @@ MODELS_TO_BENCHMARK: list[ModelConfig] = [
 
 # Benchmark settings
 BENCHMARK_SETTINGS = {
-    "parallel_requests": 3,  # Number of contests to process in parallel
-    "runs_per_test": 3,  # Number of runs per test case to average results
+    "parallel_requests": 5,  # Number of contests to process in parallel
+    "runs_per_test": 1,  # Number of runs per test case to average results
     "retry_on_failure": True,
     "retry_attempts": 2,
     "save_html_cache": True,  # Cache HTML to avoid re-fetching

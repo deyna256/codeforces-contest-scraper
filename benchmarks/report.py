@@ -42,6 +42,15 @@ def generate_comparison_report(
 
     # Add summary for each model
     for metrics in all_metrics:
+        pricing_dict = None
+        if metrics.pricing:
+            pricing_dict = {
+                "prompt_price": metrics.pricing.prompt_price,
+                "completion_price": metrics.pricing.completion_price,
+                "avg_price_per_token": round(metrics.pricing.avg_price_per_token, 10),
+                "currency": metrics.pricing.currency,
+            }
+
         summary = {
             "model_name": metrics.model_name,
             "display_name": metrics.display_name,
@@ -52,6 +61,7 @@ def generate_comparison_report(
             "precision": round(metrics._calculate_precision(), 2),
             "recall": round(metrics._calculate_recall(), 2),
             "f1_score": round(metrics._calculate_f1(), 2),
+            "pricing": pricing_dict,
         }
         report_data["summary"].append(summary)
 
@@ -70,8 +80,15 @@ def generate_comparison_report(
             ]
         }
 
-    # Sort summary by accuracy descending
-    report_data["summary"].sort(key=lambda x: x["accuracy"], reverse=True)
+    # Sort summary by accuracy descending, then by price ascending
+    def sort_key(item):
+        accuracy = item["accuracy"]
+        # Use a very high price (1e9) if pricing is not available to push those items down
+        pricing = item.get("pricing", {})
+        avg_price = pricing.get("avg_price_per_token", 1e9) if pricing else 1e9
+        return (-accuracy, avg_price)
+
+    report_data["summary"].sort(key=sort_key)
 
     # Save report
     with open(report_path, "w") as f:
@@ -115,23 +132,33 @@ def print_comparison_table(all_metrics: list[BenchmarkMetrics]) -> None:
     if not all_metrics:
         return
 
-    # Sort by accuracy
-    sorted_metrics = sorted(all_metrics, key=lambda m: m.accuracy, reverse=True)
+    # Sort by accuracy descending, then by price ascending
+    def sort_key(metrics: BenchmarkMetrics):
+        accuracy = metrics.accuracy
+        avg_price = metrics.pricing.avg_price_per_token if metrics.pricing else 1e9
+        return (-accuracy, avg_price)
 
-    print("\n" + "=" * 100)
-    print("BENCHMARK COMPARISON")
-    print("=" * 100)
+    sorted_metrics = sorted(all_metrics, key=sort_key)
+
+    print("\n" + "=" * 120)
+    print("BENCHMARK COMPARISON (Sorted: Accuracy → Price)")
+    print("=" * 120)
     print(
-        f"{'Rank':<6} {'Model':<35} {'Accuracy':>10} {'Avg Latency':>15} {'F1 Score':>12}"
+        f"{'Rank':<6} {'Model':<35} {'Accuracy':>10} {'Avg Latency':>15} {'F1 Score':>12} {'Avg Price/Token':>18}"
     )
-    print("-" * 100)
+    print("-" * 120)
 
     for rank, metrics in enumerate(sorted_metrics, 1):
+        if metrics.pricing:
+            pricing_info = f"{metrics.pricing.avg_price_per_token:.0e}"
+        else:
+            pricing_info = "         N/A"
+
         print(
             f"{rank:<6} {metrics.display_name:<35} "
             f"{metrics.accuracy:>9.1f}% {metrics.avg_latency_ms:>13.0f}ms "
-            f"{metrics._calculate_f1():>11.1f}%"
+            f"{metrics._calculate_f1():>11.1f}% {pricing_info:>18}"
         )
 
-    print("=" * 100)
+    print("=" * 120)
     print()

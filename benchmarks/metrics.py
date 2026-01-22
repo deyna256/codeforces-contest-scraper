@@ -4,7 +4,9 @@ import json
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
+
+from benchmarks.pricing import ModelPricing
 
 
 @dataclass
@@ -38,10 +40,20 @@ class BenchmarkMetrics:
     false_positives: int  # Found editorial when it doesn't exist
     false_negatives: int  # Didn't find editorial when it exists
     true_negatives: int  # Correctly identified no editorial
+    pricing: Optional[ModelPricing] = None  # Pricing information from OpenRouter
     test_results: list[TestResult] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for JSON serialization."""
+        pricing_dict = None
+        if self.pricing:
+            pricing_dict = {
+                "prompt_price": self.pricing.prompt_price,
+                "completion_price": self.pricing.completion_price,
+                "avg_price_per_token": round(self.pricing.avg_price_per_token, 10),
+                "currency": self.pricing.currency,
+            }
+
         return {
             "model_name": self.model_name,
             "display_name": self.display_name,
@@ -67,6 +79,7 @@ class BenchmarkMetrics:
                 "recall": round(self._calculate_recall(), 2),
                 "f1_score": round(self._calculate_f1(), 2),
             },
+            "pricing": pricing_dict,
             "test_results": [
                 {
                     "contest_id": r.contest_id,

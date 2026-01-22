@@ -31,6 +31,20 @@ def generate_html_report(report_data: dict[str, Any], output_path: Path) -> Path
         accuracy_class = "metric-good" if model['accuracy'] >= 80 else "metric-medium" if model['accuracy'] >= 70 else "metric-poor"
         f1_class = "metric-good" if model['f1_score'] >= 80 else "metric-medium" if model['f1_score'] >= 70 else "metric-poor"
 
+        # Format pricing information
+        pricing_info = "N/A"
+        price_class = ""
+        if model.get('pricing'):
+            avg_price = model['pricing']['avg_price_per_token']
+            pricing_info = f"{avg_price:.0e}"
+            # Color coding: green for cheap, yellow for medium, red for expensive
+            if avg_price < 1e-6:
+                price_class = "metric-good"  # Very cheap
+            elif avg_price < 1e-5:
+                price_class = "metric-medium"  # Medium
+            else:
+                price_class = ""  # Expensive (no special class)
+
         row = f"""<tr>
             <td><span class="rank{rank_class}">{i+1}</span></td>
             <td><strong>{model['display_name']}</strong><br><small style="color: #7f8c8d;">{model['model_name']}</small></td>
@@ -40,6 +54,7 @@ def generate_html_report(report_data: dict[str, Any], output_path: Path) -> Path
             <td>{model['recall']:.1f}%</td>
             <td><span class="metric {f1_class}">{model['f1_score']:.1f}%</span></td>
             <td>{model['successful_tests']}/{model['successful_tests'] + model['failed_tests']}</td>
+            <td><span class="metric {price_class}">{pricing_info}</span></td>
         </tr>"""
         comparison_rows.append(row)
 
@@ -383,6 +398,7 @@ def generate_html_report(report_data: dict[str, Any], output_path: Path) -> Path
                     <th onclick="sortTable(5)">Recall <span class="sort-indicator"></span></th>
                     <th onclick="sortTable(6)">F1 Score <span class="sort-indicator"></span></th>
                     <th onclick="sortTable(7)">Success Rate <span class="sort-indicator"></span></th>
+                    <th onclick="sortTable(8)">Avg Price/Token <span class="sort-indicator"></span></th>
                 </tr>
             </thead>
             <tbody>

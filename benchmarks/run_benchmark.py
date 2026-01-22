@@ -19,6 +19,7 @@ from loguru import logger
 
 from benchmarks.config import BENCHMARK_SETTINGS, MODELS_TO_BENCHMARK, ModelConfig
 from benchmarks.metrics import BenchmarkMetrics, TestResult, calculate_metrics
+from benchmarks.pricing import PricingManager
 from benchmarks.report import (
     generate_comparison_report,
     generate_html_report,
@@ -311,6 +312,15 @@ async def main():
             logger.error(f"No models found matching: {model_filter}")
             sys.exit(1)
 
+    # Initialize pricing manager to fetch model pricing data
+    pricing_manager = PricingManager()
+
+    try:
+        logger.info("Fetching pricing data from OpenRouter...")
+        await pricing_manager.load_or_fetch_pricing(force_refresh=False)
+    except Exception as e:
+        logger.warning(f"Failed to fetch pricing data: {e}. Benchmarks will run without pricing info.")
+
     logger.info(f"Running benchmarks for {len(models_to_run)} model(s)")
     logger.info(f"Test cases: {len(BENCHMARK_TEST_CASES)}")
 
@@ -321,10 +331,18 @@ async def main():
     for model_config in models_to_run:
         try:
             metrics = await runner.benchmark_model(model_config)
+
+            # Attach pricing information if available
+            pricing = pricing_manager.get_pricing_for_model(model_config["name"])
+            metrics.pricing = pricing
+
             all_metrics.append(metrics)
 
         except Exception as e:
             logger.error(f"Failed to benchmark {model_config['display_name']}: {e}")
+
+    # Clean up pricing manager
+    await pricing_manager.close()
 
     # Generate comparison reports if we have results
     if all_metrics:
