@@ -141,14 +141,14 @@ class LLMEditorialFinder:
         self, links: list[dict[str, str]], contest_id: str
     ) -> list[str]:
         """
-        Ask LLM to identify editorial URL from list of links.
+        Ask LLM to identify all editorial URLs from list of links.
 
         Args:
             links: List of link dicts with 'url' and 'text'
             contest_id: Contest ID for context
 
         Returns:
-            List containing editorial URL if found, empty list otherwise
+            List of all editorial URLs found (may be empty, or contain multiple URLs)
         """
         if not links or not self.llm_client:
             return []
@@ -159,7 +159,9 @@ class LLMEditorialFinder:
         )
 
         system_prompt = """You are an expert at analyzing Codeforces contest pages.
-Your task is to identify which link leads to the editorial/tutorial for the contest.
+Your task is to identify ALL links that lead to editorials/tutorials for the contest.
+
+IMPORTANT: Some contests may have multiple editorial links (e.g., different divisions, multiple parts, alternative solutions). You must return ALL editorial links found.
 
 Editorial/Solution links typically:
 - Have text like "Tutorial", "Editorial", "Analysis", "Solutions", "Разбор задач", "Разбор" (Russian for "analysis", "solutions")
@@ -178,7 +180,12 @@ Common non-editorial patterns to AVOID:
 - "Цуцсивцив", "Объявление", "Регистрация" (Russian)
 
 Respond ONLY with a JSON object in this format:
-{"url": "the_editorial_url"} if found, or {"url": null} if no editorial link exists.
+{"urls": ["url1", "url2", ...]} if found, or {"urls": []} if no editorial links exist.
+
+Examples:
+- Single editorial: {"urls": ["https://codeforces.com/blog/entry/12345"]}
+- Multiple editorials: {"urls": ["https://codeforces.com/blog/entry/12345", "https://codeforces.com/blog/entry/12346"]}
+- No editorial: {"urls": []}
 
 Do not include any explanation or additional text."""
 
@@ -187,7 +194,7 @@ Do not include any explanation or additional text."""
 Available links:
 {links_text}
 
-Which link is the editorial/tutorial? Respond with JSON only."""
+Which links are editorials/tutorials? Return ALL editorial links if multiple exist. Respond with JSON only."""
 
         logger.debug(
             f"Sending LLM request for contest {contest_id} with {len(links)} candidate links"
@@ -203,15 +210,21 @@ Which link is the editorial/tutorial? Respond with JSON only."""
 
             # Parse JSON response
             result = json.loads(response)
-            editorial_url = result.get("url")
 
-            if editorial_url:
+            # Support both new format {"urls": [...]} and old format {"url": "..."}
+            editorial_urls = result.get("urls")
+            if editorial_urls is None:
+                # Fall back to old format for backward compatibility
+                single_url = result.get("url")
+                editorial_urls = [single_url] if single_url else []
+
+            if editorial_urls:
                 logger.info(
-                    f"LLM identified editorial URL for contest {contest_id}: {editorial_url}"
+                    f"LLM identified {len(editorial_urls)} editorial URL(s) for contest {contest_id}: {editorial_urls}"
                 )
-                return [editorial_url]
+                return editorial_urls
             else:
-                logger.debug(f"LLM did not find editorial URL for contest {contest_id}")
+                logger.debug(f"LLM did not find editorial URLs for contest {contest_id}")
                 return []
 
         except json.JSONDecodeError as e:
