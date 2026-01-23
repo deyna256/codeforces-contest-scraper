@@ -34,6 +34,30 @@ MODELS_TO_BENCHMARK: list[ModelConfig] = [
         "max_tokens": 100,
     },
     {
+        "name": "x-ai/grok-4.1-fast",
+        "display_name": "xAI: Grok 4.1 Fast",
+        "timeout": 30.0,
+        "max_tokens": 100,
+    },
+    {
+        "name": "google/gemini-2.0-flash-001",
+        "display_name": "Google Gemini 2.0 Flash",
+        "timeout": 30.0,
+        "max_tokens": 100,
+    },
+    {
+        "name": "meta-llama/llama-3.1-8b-instruct",
+        "display_name": "Meta: Llama 3.1 8B Instruct",
+        "timeout": 30.0,
+        "max_tokens": 100,
+    },
+    {
+        "name": "google/gemini-2.5-flash-lite",
+        "display_name": "Google: Gemini 2.5 Flash Lite",
+        "timeout": 30.0,
+        "max_tokens": 100,
+    },
+    {
         "name": "google/gemini-3-flash-preview",
         "display_name": "Gemini 3 Flash-Preview",
         "timeout": 30.0,
@@ -63,6 +87,7 @@ MODELS_TO_BENCHMARK: list[ModelConfig] = [
         "timeout": 30.0,
         "max_tokens": 100,
     },
+
 ]
 
 # Benchmark settings
