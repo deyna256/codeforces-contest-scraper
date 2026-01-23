@@ -97,9 +97,7 @@ def generate_comparison_report(
     return report_path, report_data
 
 
-def generate_html_report(
-    all_metrics: list[BenchmarkMetrics], output_dir: Path
-) -> Path:
+def generate_html_report(all_metrics: list[BenchmarkMetrics], output_dir: Path) -> Path:
     """
     Generate interactive HTML report for benchmark results.
 

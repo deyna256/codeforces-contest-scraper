@@ -11,7 +11,7 @@ class TestCase(TypedDict):
     """Test case with ground truth."""
 
     contest_id: str
-    expected_editorial: str | None  # None if no editorial exists
+    expected_editorial: list[str]  # Empty list if no editorial exists
     description: str
     difficulty: str  # "easy", "medium", "hard"
 
@@ -22,26 +22,98 @@ BENCHMARK_TEST_CASES: list[TestCase] = [
     # Example cases - replace with real verified data
     {
         "contest_id": "2185",
-        "expected_editorial": "https://codeforces.com/blog/entry/150288",
+        "expected_editorial": ["https://codeforces.com/blog/entry/150288"],
         "description": "Codeforces Round 1074 (Div. 4)",
         "difficulty": "easy",
     },
     {
         "contest_id": "2190",
-        "expected_editorial": "https://codeforces.com/blog/entry/150256",
+        "expected_editorial": ["https://codeforces.com/blog/entry/150256"],
         "description": "Codeforces Round 1073 (Div. 1)",
         "difficulty": "easy",
     },
     {
         "contest_id": "2191",
-        "expected_editorial": "https://codeforces.com/blog/entry/150256",
+        "expected_editorial": ["https://codeforces.com/blog/entry/150256"],
         "description": "Codeforces Round 1073 (Div. 2)",
         "difficulty": "medium",
     },
     {
         "contest_id": "2184",
-        "expected_editorial": "https://codeforces.com/blog/entry/150033",
+        "expected_editorial": ["https://codeforces.com/blog/entry/150033"],
         "description": "Codeforces Round 1072 (Div. 3)",
+        "difficulty": "easy",
+    },
+    {
+        "contest_id": "2183",
+        "expected_editorial": ["https://codeforces.com/blog/entry/149944"],
+        "description": "Hello 2026",
+        "difficulty": "easy",
+    },
+    {
+        "contest_id": "2182",
+        "expected_editorial": ["https://codeforces.com/blog/entry/149733"],
+        "description": "Educational Codeforces Round 186 (Rated for Div. 2)",
+        "difficulty": "easy",
+    },
+    {
+        "contest_id": "2178",
+        "expected_editorial": ["https://codeforces.com/blog/entry/149548"],
+        "description": "Good Bye 2025",
+        "difficulty": "easy",
+    },
+    {
+        "contest_id": "2177",
+        "expected_editorial": [],
+        "description": "ICPC 2025 Online Winter Challenge powered by Huawei",
+        "difficulty": "easy",
+    },
+    {
+        "contest_id": "36",
+        "expected_editorial": ["https://codeforces.com/blog/entry/773"],
+        "description": "Codeforces Beta Round 36",
+        "difficulty": "easy",
+    },
+    {
+        "contest_id": "2102",
+        "expected_editorial": ["https://codeforces.com/blog/entry/142788"],
+        "description": "Codeforces Round 1024 (Div. 2)",
+        "difficulty": "easy",
+    },
+    {
+        "contest_id": "2124",
+        "expected_editorial": ["https://codeforces.com/blog/entry/144382"],
+        "description": "EPIC Institute of Technology Round Summer 2025 (Codeforces Round 1036, Div. 1 + Div. 2)",
+        "difficulty": "easy",
+    },
+    {
+        "contest_id": "1975",
+        "expected_editorial": ["https://codeforces.com/blog/entry/129801"],
+        "description": "Codeforces Round 947 (Div. 1 + Div. 2)",
+        "difficulty": "easy",
+    },
+    {
+        "contest_id": "1970",
+        "expected_editorial": ["https://codeforces.com/blog/entry/129149"],
+        "description": "Helvetic Coding Contest 2024",
+        "difficulty": "easy",
+    },
+    {
+        "contest_id": "1992",
+        "expected_editorial": ["https://codeforces.com/blog/entry/131461"],
+        "description": "Codeforces Round 957 (Div. 3)",
+        "difficulty": "easy",
+    },
+    {
+        "contest_id": "1991",
+        "expected_editorial": ["https://codeforces.com/blog/entry/132021"],
+        "description": "Pinely Round 4 (Div. 1 + Div. 2)",
+        "difficulty": "easy",
+    },
+    {
+        "contest_id": "2010",
+        "expected_editorial": [],
+        "description": "Testing Round 19 (Div. 3)",
         "difficulty": "easy",
     },
     # Add more test cases here

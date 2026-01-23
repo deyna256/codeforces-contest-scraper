@@ -1,6 +1,6 @@
 """Benchmark configuration for LLM models."""
 
-from typing import TypedDict, Optional
+from typing import TypedDict
 
 
 class ModelConfig(TypedDict):
@@ -42,6 +42,24 @@ MODELS_TO_BENCHMARK: list[ModelConfig] = [
     {
         "name": "google/gemini-2.5-flash",
         "display_name": "Gemini 2.5 Flash",
+        "timeout": 30.0,
+        "max_tokens": 100,
+    },
+    {
+        "name": "openai/gpt-4o-mini",
+        "display_name": "OpenAI GPT 4o-mini",
+        "timeout": 30.0,
+        "max_tokens": 100,
+    },
+    {
+        "name": "openai/gpt-oss-20b:free",
+        "display_name": "OpenAI GPT OSS 20b",
+        "timeout": 30.0,
+        "max_tokens": 100,
+    },
+    {
+        "name": "meta-llama/llama-3.3-70b-instruct:free",
+        "display_name": "Meta LLAMA-3.3 70B",
         "timeout": 30.0,
         "max_tokens": 100,
     },

@@ -17,7 +17,7 @@ def generate_html_report(report_data: dict[str, Any], output_path: Path) -> Path
         Path to generated HTML file
     """
     # Generate timestamp string
-    timestamp_str = report_data['benchmark_info']['timestamp']
+    timestamp_str = report_data["benchmark_info"]["timestamp"]
     try:
         dt = datetime.strptime(timestamp_str, "%Y%m%d_%H%M%S")
         formatted_date = dt.strftime("%B %d, %Y at %H:%M:%S")
@@ -26,16 +26,28 @@ def generate_html_report(report_data: dict[str, Any], output_path: Path) -> Path
 
     # Generate comparison table rows
     comparison_rows = []
-    for i, model in enumerate(report_data['summary']):
-        rank_class = f" rank-{i+1}" if i < 3 else ""
-        accuracy_class = "metric-good" if model['accuracy'] >= 80 else "metric-medium" if model['accuracy'] >= 70 else "metric-poor"
-        f1_class = "metric-good" if model['f1_score'] >= 80 else "metric-medium" if model['f1_score'] >= 70 else "metric-poor"
+    for i, model in enumerate(report_data["summary"]):
+        rank_class = f" rank-{i + 1}" if i < 3 else ""
+        accuracy_class = (
+            "metric-good"
+            if model["accuracy"] >= 80
+            else "metric-medium"
+            if model["accuracy"] >= 70
+            else "metric-poor"
+        )
+        f1_class = (
+            "metric-good"
+            if model["f1_score"] >= 80
+            else "metric-medium"
+            if model["f1_score"] >= 70
+            else "metric-poor"
+        )
 
         # Format pricing information
         pricing_info = "N/A"
         price_class = ""
-        if model.get('pricing'):
-            avg_price = model['pricing']['avg_price_per_token']
+        if model.get("pricing"):
+            avg_price = model["pricing"]["avg_price_per_token"]
             pricing_info = f"{avg_price:.0e}"
             # Color coding: green for cheap, yellow for medium, red for expensive
             if avg_price < 1e-6:
@@ -46,34 +58,40 @@ def generate_html_report(report_data: dict[str, Any], output_path: Path) -> Path
                 price_class = ""  # Expensive (no special class)
 
         row = f"""<tr>
-            <td><span class="rank{rank_class}">{i+1}</span></td>
-            <td><strong>{model['display_name']}</strong><br><small style="color: #7f8c8d;">{model['model_name']}</small></td>
-            <td><span class="metric {accuracy_class}">{model['accuracy']:.1f}%</span></td>
-            <td>{model['avg_latency_ms']:.0f}ms</td>
-            <td>{model['precision']:.1f}%</td>
-            <td>{model['recall']:.1f}%</td>
-            <td><span class="metric {f1_class}">{model['f1_score']:.1f}%</span></td>
-            <td>{model['successful_tests']}/{model['successful_tests'] + model['failed_tests']}</td>
+            <td><span class="rank{rank_class}">{i + 1}</span></td>
+            <td><strong>{model["display_name"]}</strong><br><small style="color: #7f8c8d;">{model["model_name"]}</small></td>
+            <td><span class="metric {accuracy_class}">{model["accuracy"]:.1f}%</span></td>
+            <td>{model["avg_latency_ms"]:.0f}ms</td>
+            <td>{model["precision"]:.1f}%</td>
+            <td>{model["recall"]:.1f}%</td>
+            <td><span class="metric {f1_class}">{model["f1_score"]:.1f}%</span></td>
+            <td>{model["successful_tests"]}/{model["successful_tests"] + model["failed_tests"]}</td>
             <td><span class="metric {price_class}">{pricing_info}</span></td>
         </tr>"""
         comparison_rows.append(row)
 
     # Generate detailed results sections
     details_sections = []
-    for model in report_data['summary']:
-        model_id = model['model_name'].replace('/', '-')
-        accuracy_color = '#27ae60' if model['accuracy'] >= 80 else '#f39c12' if model['accuracy'] >= 70 else '#e74c3c'
+    for model in report_data["summary"]:
+        model_id = model["model_name"].replace("/", "-")
+        accuracy_color = (
+            "#27ae60"
+            if model["accuracy"] >= 80
+            else "#f39c12"
+            if model["accuracy"] >= 70
+            else "#e74c3c"
+        )
 
         # Generate test result rows
         test_rows = []
-        for test in report_data['detailed_results'][model['model_name']]['test_results']:
-            expected_text = test['expected'] if test['expected'] else 'None'
-            found_text = ', '.join(test['found']) if test['found'] else 'None'
+        for test in report_data["detailed_results"][model["model_name"]]["test_results"]:
+            expected_text = test["expected"] if test["expected"] else "None"
+            found_text = ", ".join(test["found"]) if test["found"] else "None"
 
-            if test['correct']:
+            if test["correct"]:
                 result_class = "test-correct"
                 result_text = "✓ Correct"
-            elif test.get('error'):
+            elif test.get("error"):
                 result_class = "test-error"
                 result_text = "⚠ Error"
             else:
@@ -81,32 +99,32 @@ def generate_html_report(report_data: dict[str, Any], output_path: Path) -> Path
                 result_text = "✗ Incorrect"
 
             test_row = f"""<tr>
-                <td><span class="contest-id">{test['contest_id']}</span></td>
+                <td><span class="contest-id">{test["contest_id"]}</span></td>
                 <td><small>{expected_text}</small></td>
                 <td><small>{found_text}</small></td>
                 <td><span class="test-result {result_class}">{result_text}</span></td>
-                <td>{test['latency_ms']:.0f}ms</td>
+                <td>{test["latency_ms"]:.0f}ms</td>
             </tr>"""
             test_rows.append(test_row)
 
         section = f"""<div class="model-details" id="model-{model_id}">
-            <div class="model-name">{model['display_name']}</div>
+            <div class="model-name">{model["display_name"]}</div>
             <div class="metrics-row">
                 <div class="metric-box">
                     <div class="metric-box-label">Accuracy</div>
-                    <div class="metric-box-value" style="color: {accuracy_color}">{model['accuracy']:.1f}%</div>
+                    <div class="metric-box-value" style="color: {accuracy_color}">{model["accuracy"]:.1f}%</div>
                 </div>
                 <div class="metric-box">
                     <div class="metric-box-label">Avg Latency</div>
-                    <div class="metric-box-value">{model['avg_latency_ms']:.0f}ms</div>
+                    <div class="metric-box-value">{model["avg_latency_ms"]:.0f}ms</div>
                 </div>
                 <div class="metric-box">
                     <div class="metric-box-label">F1 Score</div>
-                    <div class="metric-box-value">{model['f1_score']:.1f}%</div>
+                    <div class="metric-box-value">{model["f1_score"]:.1f}%</div>
                 </div>
                 <div class="metric-box">
                     <div class="metric-box-label">Tests Passed</div>
-                    <div class="metric-box-value">{model['successful_tests']}/{model['successful_tests'] + model['failed_tests']}</div>
+                    <div class="metric-box-value">{model["successful_tests"]}/{model["successful_tests"] + model["failed_tests"]}</div>
                 </div>
             </div>
 
@@ -121,7 +139,7 @@ def generate_html_report(report_data: dict[str, Any], output_path: Path) -> Path
                     </tr>
                 </thead>
                 <tbody>
-                    {''.join(test_rows)}
+                    {"".join(test_rows)}
                 </tbody>
             </table>
         </div>"""
@@ -378,11 +396,11 @@ def generate_html_report(report_data: dict[str, Any], output_path: Path) -> Path
         <div class="info-grid">
             <div class="info-card">
                 <div class="info-label">Total Models</div>
-                <div class="info-value">{report_data['benchmark_info']['total_models']}</div>
+                <div class="info-value">{report_data["benchmark_info"]["total_models"]}</div>
             </div>
             <div class="info-card">
                 <div class="info-label">Test Cases</div>
-                <div class="info-value">{report_data['benchmark_info']['test_cases']}</div>
+                <div class="info-value">{report_data["benchmark_info"]["test_cases"]}</div>
             </div>
         </div>
 
@@ -402,13 +420,13 @@ def generate_html_report(report_data: dict[str, Any], output_path: Path) -> Path
                 </tr>
             </thead>
             <tbody>
-                {''.join(comparison_rows)}
+                {"".join(comparison_rows)}
             </tbody>
         </table>
 
         <h2>📋 Detailed Results</h2>
         <div class="details-section">
-            {''.join(details_sections)}
+            {"".join(details_sections)}
         </div>
     </div>
 
@@ -463,7 +481,7 @@ def generate_html_report(report_data: dict[str, Any], output_path: Path) -> Path
 </body>
 </html>"""
 
-    with open(output_path, 'w', encoding='utf-8') as f:
+    with open(output_path, "w", encoding="utf-8") as f:
         f.write(html_content)
 
     return output_path

@@ -2,7 +2,7 @@
 
 import json
 from dataclasses import dataclass
-from typing import Optional, Dict, Any
+from typing import Optional, Dict
 from pathlib import Path
 
 import httpx
@@ -25,7 +25,7 @@ class ModelPricing:
 class PricingManager:
     """Manages fetching and caching of model pricing data."""
 
-    def __init__(self, cache_file: Path = None):
+    def __init__(self, cache_file: Path | None = None):
         """
         Initialize pricing manager.
 
@@ -33,7 +33,9 @@ class PricingManager:
             cache_file: Path to cache pricing data. If None, uses default location.
         """
         self.http_client = httpx.AsyncClient(timeout=httpx.Timeout(30.0))
-        self.cache_file = cache_file or Path(__file__).parent / "results" / "openrouter_pricing_cache.json"
+        self.cache_file = (
+            cache_file or Path(__file__).parent / "results" / "openrouter_pricing_cache.json"
+        )
         self._pricing_cache: Dict[str, ModelPricing] = {}
         self._cache_loaded = False
 
@@ -75,15 +77,15 @@ class PricingManager:
 
         try:
             if self.cache_file.exists():
-                with open(self.cache_file, 'r') as f:
+                with open(self.cache_file, "r") as f:
                     data = json.load(f)
 
                 self._pricing_cache = {}
                 for model_name, pricing_data in data.items():
                     self._pricing_cache[model_name] = ModelPricing(
-                        prompt_price=float(pricing_data['prompt_price']),
-                        completion_price=float(pricing_data['completion_price']),
-                        currency=pricing_data.get('currency', 'USD')
+                        prompt_price=float(pricing_data["prompt_price"]),
+                        completion_price=float(pricing_data["completion_price"]),
+                        currency=pricing_data.get("currency", "USD"),
                     )
 
                 self._cache_loaded = True
@@ -101,20 +103,20 @@ class PricingManager:
         response_data = response.json()
 
         self._pricing_cache = {}
-        for model in response_data.get('data', []):
-            model_id = model.get('id')
-            pricing_data = model.get('pricing', {})
+        for model in response_data.get("data", []):
+            model_id = model.get("id")
+            pricing_data = model.get("pricing", {})
 
             if model_id and pricing_data:
                 try:
                     # Convert string prices to float (they're in scientific notation sometimes)
-                    prompt_price = float(pricing_data.get('prompt', '0'))
-                    completion_price = float(pricing_data.get('completion', '0'))
+                    prompt_price = float(pricing_data.get("prompt", "0"))
+                    completion_price = float(pricing_data.get("completion", "0"))
 
                     self._pricing_cache[model_id] = ModelPricing(
                         prompt_price=prompt_price,
                         completion_price=completion_price,
-                        currency="USD"  # OpenRouter uses USD
+                        currency="USD",  # OpenRouter uses USD
                     )
                 except (ValueError, TypeError) as e:
                     print(f"Failed to parse pricing for {model_id}: {e}")
@@ -128,12 +130,12 @@ class PricingManager:
             cache_data = {}
             for model_name, pricing in self._pricing_cache.items():
                 cache_data[model_name] = {
-                    'prompt_price': pricing.prompt_price,
-                    'completion_price': pricing.completion_price,
-                    'currency': pricing.currency
+                    "prompt_price": pricing.prompt_price,
+                    "completion_price": pricing.completion_price,
+                    "currency": pricing.currency,
                 }
 
-            with open(self.cache_file, 'w') as f:
+            with open(self.cache_file, "w") as f:
                 json.dump(cache_data, f, indent=2)
 
         except Exception as e:

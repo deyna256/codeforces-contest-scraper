@@ -14,7 +14,7 @@ class TestResult:
     """Result for a single test case."""
 
     contest_id: str
-    expected_editorial: str | None
+    expected_editorial: list[str]
     found_editorial: list[str]
     is_correct: bool
     latency_ms: float
@@ -127,9 +127,9 @@ class BenchmarkMetrics:
 
     def print_summary(self) -> None:
         """Print formatted summary to console."""
-        print(f"\n{'='*70}")
+        print(f"\n{'=' * 70}")
         print(f"Benchmark Results: {self.display_name}")
-        print(f"{'='*70}")
+        print(f"{'=' * 70}")
         print(f"Model: {self.model_name}")
         print(f"Timestamp: {self.timestamp}")
         print()
@@ -149,7 +149,7 @@ class BenchmarkMetrics:
         print(f"  Precision: {self._calculate_precision():.1f}%")
         print(f"  Recall:    {self._calculate_recall():.1f}%")
         print(f"  F1 Score:  {self._calculate_f1():.1f}%")
-        print(f"{'='*70}\n")
+        print(f"{'=' * 70}\n")
 
 
 def calculate_metrics(
@@ -185,22 +185,18 @@ def calculate_metrics(
     tp = sum(
         1
         for r in results
-        if r.expected_editorial is not None and len(r.found_editorial) > 0 and r.is_correct
+        if len(r.expected_editorial) > 0 and len(r.found_editorial) > 0 and r.is_correct
     )
     fp = sum(
         1
         for r in results
-        if r.expected_editorial is None and len(r.found_editorial) > 0 and not r.is_correct
+        if len(r.expected_editorial) == 0 and len(r.found_editorial) > 0 and not r.is_correct
     )
-    fn = sum(
-        1
-        for r in results
-        if r.expected_editorial is not None and len(r.found_editorial) == 0
-    )
+    fn = sum(1 for r in results if len(r.expected_editorial) > 0 and len(r.found_editorial) == 0)
     tn = sum(
         1
         for r in results
-        if r.expected_editorial is None and len(r.found_editorial) == 0 and r.is_correct
+        if len(r.expected_editorial) == 0 and len(r.found_editorial) == 0 and r.is_correct
     )
 
     return BenchmarkMetrics(

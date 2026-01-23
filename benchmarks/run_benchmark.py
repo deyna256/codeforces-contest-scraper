@@ -69,7 +69,7 @@ class BenchmarkRunner:
         return html
 
     async def test_single_case_with_averaging(
-        self, model_config: ModelConfig, contest_id: str, expected_editorial: str | None
+        self, model_config: ModelConfig, contest_id: str, expected_editorial: list[str]
     ) -> TestResult:
         """
         Test a single contest multiple times and average results.
@@ -77,7 +77,7 @@ class BenchmarkRunner:
         Args:
             model_config: Model configuration
             contest_id: Contest ID
-            expected_editorial: Expected editorial URL or None
+            expected_editorial: Expected editorial URLs (empty list if no editorial exists)
 
         Returns:
             Averaged test result
@@ -87,9 +87,7 @@ class BenchmarkRunner:
         # Run test multiple times
         results = []
         for _ in range(runs_per_test):
-            result = await self._test_single_run(
-                model_config, contest_id, expected_editorial
-            )
+            result = await self._test_single_run(model_config, contest_id, expected_editorial)
             results.append(result)
 
         # Average latency
@@ -118,7 +116,7 @@ class BenchmarkRunner:
         )
 
     async def _test_single_run(
-        self, model_config: ModelConfig, contest_id: str, expected_editorial: str | None
+        self, model_config: ModelConfig, contest_id: str, expected_editorial: list[str]
     ) -> TestResult:
         """
         Run a single test for a contest with a specific model.
@@ -126,11 +124,16 @@ class BenchmarkRunner:
         Args:
             model_config: Model configuration
             contest_id: Contest ID
-            expected_editorial: Expected editorial URL or None
+            expected_editorial: Expected editorial URLs (empty list if no editorial exists)
 
         Returns:
             Test result for this run
         """
+        # Add delay for free models to avoid rate limiting (before timing starts)
+        if ":free" in model_config["name"]:
+            logger.debug(f"Adding 20-second delay for free model: {model_config['display_name']}")
+            await asyncio.sleep(20)
+
         start_time = time.perf_counter()
         error = None
         found_editorial: list[str] = []
@@ -175,39 +178,37 @@ class BenchmarkRunner:
             error=error,
         )
 
-    def _is_result_correct(
-        self, expected: str | None, found: list[str]
-    ) -> bool:
+    def _is_result_correct(self, expected: list[str], found: list[str]) -> bool:
         """
         Check if found editorial matches expected.
 
         Args:
-            expected: Expected editorial URL or None
+            expected: Expected editorial URLs (empty list if no editorial exists)
             found: Found editorial URLs
 
         Returns:
             True if correct
         """
         # Case 1: No editorial expected and none found
-        if expected is None and len(found) == 0:
+        if len(expected) == 0 and len(found) == 0:
             return True
 
         # Case 2: Editorial expected but none found
-        if expected is not None and len(found) == 0:
+        if len(expected) > 0 and len(found) == 0:
             return False
 
         # Case 3: No editorial expected but some found
-        if expected is None and len(found) > 0:
+        if len(expected) == 0 and len(found) > 0:
             return False
 
-        # Case 4: Editorial expected and found - check if it matches
-        if expected is not None and len(found) > 0:
+        # Case 4: Editorial expected and found - check if there's at least one match
+        if len(expected) > 0 and len(found) > 0:
             # Normalize URLs for comparison (remove trailing slashes, etc.)
-            expected_normalized = expected.rstrip("/").lower()
-            for url in found:
-                if url.rstrip("/").lower() == expected_normalized:
-                    return True
-            return False
+            expected_normalized = {url.rstrip("/").lower() for url in expected}
+            found_normalized = {url.rstrip("/").lower() for url in found}
+
+            # Check if there's any intersection
+            return len(expected_normalized & found_normalized) > 0
 
         return False
 
@@ -245,14 +246,10 @@ class BenchmarkRunner:
             results.extend(batch_results)
 
             # Log progress
-            logger.info(
-                f"Processed {len(results)}/{len(BENCHMARK_TEST_CASES)} test cases"
-            )
+            logger.info(f"Processed {len(results)}/{len(BENCHMARK_TEST_CASES)} test cases")
 
         # Calculate metrics
-        metrics = calculate_metrics(
-            model_config["name"], model_config["display_name"], results
-        )
+        metrics = calculate_metrics(model_config["name"], model_config["display_name"], results)
 
         return metrics
 
@@ -319,7 +316,9 @@ async def main():
         logger.info("Fetching pricing data from OpenRouter...")
         await pricing_manager.load_or_fetch_pricing(force_refresh=False)
     except Exception as e:
-        logger.warning(f"Failed to fetch pricing data: {e}. Benchmarks will run without pricing info.")
+        logger.warning(
+            f"Failed to fetch pricing data: {e}. Benchmarks will run without pricing info."
+        )
 
     logger.info(f"Running benchmarks for {len(models_to_run)} model(s)")
     logger.info(f"Test cases: {len(BENCHMARK_TEST_CASES)}")
