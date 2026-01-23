@@ -70,7 +70,7 @@ BENCHMARK_TEST_CASES: list[TestCase] = [
     },
     {
         "contest_id": "36",
-        "expected_editorial": ["https://codeforces.com/blog/entry/773"],
+        "expected_editorial": ["https://codeforces.com/blog/entry/773", "https://codeforces.com/blog/entry/774", "https://codeforces.com/blog/entry/768", "https://codeforces.com/blog/entry/769", "https://codeforces.com/blog/entry/770", "https://codeforces.com/blog/entry/771"],
         "description": "Codeforces Beta Round 36",
         "difficulty": "easy",
     },
@@ -114,6 +114,42 @@ BENCHMARK_TEST_CASES: list[TestCase] = [
         "contest_id": "2010",
         "expected_editorial": [],
         "description": "Testing Round 19 (Div. 3)",
+        "difficulty": "easy",
+    },
+    {
+        "contest_id": "1866",
+        "expected_editorial": ["https://codeforces.com/blog/entry/120025"],
+        "description": "COMPFEST 15 - Preliminary Online Mirror (Unrated, ICPC Rules, Teams Preferred)",
+        "difficulty": "easy",
+    },
+    {
+        "contest_id": "1860",
+        "expected_editorial": ["https://codeforces.com/blog/entry/119504"],
+        "description": "Educational Codeforces Round 153 (Rated for Div. 2)",
+        "difficulty": "easy",
+    },
+    {
+        "contest_id": "1856",
+        "expected_editorial": ["https://codeforces.com/blog/entry/119058"],
+        "description": "Codeforces Round 890 (Div. 2) supported by Constructor Institute",
+        "difficulty": "easy",
+    },
+    {
+        "contest_id": "1826",
+        "expected_editorial": ["https://codeforces.com/blog/entry/115892"],
+        "description": "Codeforces Round 870 (Div. 2)",
+        "difficulty": "easy",
+    },
+    {
+        "contest_id": "1774",
+        "expected_editorial": ["https://codeforces.com/blog/entry/110184"],
+        "description": "Polynomial Round 2022 (Div. 1 + Div. 2, Rated, Prizes!)",
+        "difficulty": "easy",
+    },
+    {
+        "contest_id": "1770",
+        "expected_editorial": ["https://codeforces.com/blog/entry/110754"],
+        "description": "Good Bye 2022: 2023 is NEAR",
         "difficulty": "easy",
     },
     # Add more test cases here
