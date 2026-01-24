@@ -20,6 +20,7 @@ class ContestProblemResponse(BaseModel):
     tags: list[str]
     time_limit: str | None = None
     memory_limit: str | None = None
+    explanation: str | None = None
 
     class Config:
         from_attributes = True

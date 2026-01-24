@@ -36,6 +36,7 @@ class ContestController(Controller):
                 tags=problem.tags,
                 time_limit=problem.time_limit,
                 memory_limit=problem.memory_limit,
+                explanation=problem.explanation,
             )
             for problem in contest.problems
         ]

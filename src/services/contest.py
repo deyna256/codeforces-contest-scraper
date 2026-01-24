@@ -100,6 +100,20 @@ class ContestService:
         if failed_count > 0:
             logger.warning(f"Failed to parse {failed_count} problem(s) for contest {contest_id}")
 
+        # Try to fetch editorial content and populate explanations
+        if self.editorial_parser and editorials:
+            try:
+                editorial_data = await self.get_editorial_content(contest_id, editorials)
+                # Create a map from problem_id to explanation
+                explanation_map = {edit.problem_id: edit.analysis_text for edit in editorial_data.editorials}
+                # Update problems with explanations
+                for problem in contest_problems:
+                    problem.explanation = explanation_map.get(problem.id.upper())
+                logger.info(f"Added editorial explanations for contest {contest_id}")
+            except Exception as e:
+                logger.warning(f"Failed to fetch editorial content for contest {contest_id}: {e}")
+                # Continue without explanations
+
         # Create Contest object
         contest = Contest(
             contest_id=contest_id,

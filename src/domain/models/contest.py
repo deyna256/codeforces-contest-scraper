@@ -15,6 +15,7 @@ class ContestProblem:
     tags: list[str] = field(default_factory=list)
     time_limit: str | None = None
     memory_limit: str | None = None
+    explanation: str | None = None
 
 
 @dataclass
