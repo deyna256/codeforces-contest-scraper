@@ -13,8 +13,14 @@ from infrastructure.errors import (
     GymContestError,
 )
 from infrastructure.parsers import ParsingError, URLParsingError
+from infrastructure.parsers.errors import (
+    EditorialContentFetchError,
+    EditorialContentParseError,
+    EditorialNotFoundError,
+    LLMSegmentationError,
+)
 from api.exceptions import exception_to_http_response
-from api.routes import CacheController, ContestController, ProblemController
+from api.routes import CacheController, ContestController, EditorialController, ProblemController
 
 
 def create_app() -> Litestar:
@@ -42,7 +48,11 @@ def create_app() -> Litestar:
         CacheError: exception_to_http_response,
         CodeforcesEditorialError: exception_to_http_response,
         ContestNotFoundError: exception_to_http_response,
+        EditorialContentFetchError: exception_to_http_response,
+        EditorialContentParseError: exception_to_http_response,
+        EditorialNotFoundError: exception_to_http_response,
         GymContestError: exception_to_http_response,
+        LLMSegmentationError: exception_to_http_response,
         ParsingError: exception_to_http_response,
         URLParsingError: exception_to_http_response,
     }
@@ -54,7 +64,7 @@ def create_app() -> Litestar:
     )
 
     app = Litestar(
-        route_handlers=[CacheController, ContestController, ProblemController],
+        route_handlers=[CacheController, ContestController, EditorialController, ProblemController],
         stores=stores,
         middleware=middleware,
         exception_handlers=exception_handlers,

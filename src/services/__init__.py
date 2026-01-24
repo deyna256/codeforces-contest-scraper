@@ -27,7 +27,7 @@ def create_contest_service() -> ContestService:
     from infrastructure.http_client import AsyncHTTPClient
     from infrastructure.codeforces_client import CodeforcesApiClient
     from infrastructure.llm_client import OpenRouterClient
-    from infrastructure.parsers import ContestPageParser, URLParser
+    from infrastructure.parsers import ContestPageParser, URLParser, EditorialContentParser
     from infrastructure.parsers.llm_editorial_finder import LLMEditorialFinder
 
     settings = get_settings()
@@ -48,10 +48,16 @@ def create_contest_service() -> ContestService:
 
     page_parser = ContestPageParser(http_client, llm_editorial_finder)
 
+    # Create editorial content parser if LLM is enabled
+    editorial_parser = None
+    if settings.llm_enabled and settings.openrouter_api_key:
+        editorial_parser = EditorialContentParser(http_client, llm_client)
+
     return ContestService(
         api_client=api_client,
         page_parser=page_parser,
         url_parser=URLParser,
+        editorial_parser=editorial_parser,
     )
 
 
