@@ -2,9 +2,8 @@
 
 import json
 import re
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional
 
-import httpx
 from bs4 import BeautifulSoup
 from loguru import logger
 

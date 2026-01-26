@@ -30,7 +30,7 @@ class LLMSegmentationError(EditorialParserError):
 
     def __init__(self, contest_id: str | None = None, llm_response: str | None = None):
         self.llm_response = llm_response
-        super().__init__(f"LLM failed to segment editorial into problem solutions", contest_id)
+        super().__init__("LLM failed to segment editorial into problem solutions", contest_id)
 
 
 class EditorialNotFoundError(EditorialParserError):
