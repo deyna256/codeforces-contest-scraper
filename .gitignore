@@ -68,3 +68,5 @@ dmypy.json
 # Benchmark results - keep reports
 benchmarks/results/*
 
+# Agents
+CLAUDE.md
