@@ -261,6 +261,8 @@ class EditorialContentParser:
         Returns:
             Dictionary mapping problem letters to solution texts
         """
+        assert self.llm_client is not None, "LLM client must be initialized"
+
         # Truncate text if too long (LLM token limits)
         max_chars = 40000  # Conservative limit
         if len(editorial_text) > max_chars:
