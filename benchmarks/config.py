@@ -87,7 +87,6 @@ MODELS_TO_BENCHMARK: list[ModelConfig] = [
         "timeout": 30.0,
         "max_tokens": 100,
     },
-
 ]
 
 # Benchmark settings

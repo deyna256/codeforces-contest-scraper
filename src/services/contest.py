@@ -105,7 +105,9 @@ class ContestService:
             try:
                 editorial_data = await self.get_editorial_content(contest_id, editorials)
                 # Create a map from problem_id to explanation
-                explanation_map = {edit.problem_id: edit.analysis_text for edit in editorial_data.editorials}
+                explanation_map = {
+                    edit.problem_id: edit.analysis_text for edit in editorial_data.editorials
+                }
                 # Update problems with explanations
                 for problem in contest_problems:
                     problem.explanation = explanation_map.get(problem.id.upper())
@@ -197,9 +199,7 @@ class ContestService:
         return await self.get_contest(identifier.contest_id)
 
     async def get_editorial_content(
-        self,
-        contest_id: str,
-        editorial_urls: list[str] | None = None
+        self, contest_id: str, editorial_urls: list[str] | None = None
     ) -> ContestEditorial:
         """
         Get editorial content for a contest, segmented by individual problems.
@@ -219,6 +219,7 @@ class ContestService:
 
         if not self.editorial_parser:
             from infrastructure.parsers.editorial_content_parser import EditorialNotFoundError
+
             raise EditorialNotFoundError(contest_id)
 
         # Get editorial URLs if not provided
@@ -228,6 +229,7 @@ class ContestService:
 
         if not editorial_urls:
             from infrastructure.parsers.editorial_content_parser import EditorialNotFoundError
+
             raise EditorialNotFoundError(contest_id)
 
         # Parse editorial content

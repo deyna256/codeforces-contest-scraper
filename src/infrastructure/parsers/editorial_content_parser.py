@@ -25,7 +25,7 @@ class EditorialContentParser:
     def __init__(
         self,
         http_client: Optional[AsyncHTTPClient] = None,
-        llm_client: Optional[OpenRouterClient] = None
+        llm_client: Optional[OpenRouterClient] = None,
     ):
         """
         Initialize editorial content parser.
@@ -38,9 +38,7 @@ class EditorialContentParser:
         self.llm_client = llm_client
 
     async def parse_editorial_content(
-        self,
-        contest_id: str,
-        editorial_urls: List[str]
+        self, contest_id: str, editorial_urls: List[str]
     ) -> ContestEditorial:
         """
         Parse editorial content and segment into individual problem solutions.
@@ -76,22 +74,18 @@ class EditorialContentParser:
 
         if not all_content:
             raise EditorialContentFetchError(
-                f"All editorial URLs failed to load: {failed_urls}",
-                contest_id
+                f"All editorial URLs failed to load: {failed_urls}", contest_id
             )
 
         # Combine all editorial content
         combined_content = await self._combine_editorial_content(all_content)
 
         # Use LLM to segment into problem-specific solutions
-        problem_solutions = await self._segment_by_problems(
-            combined_content, contest_id
-        )
+        problem_solutions = await self._segment_by_problems(combined_content, contest_id)
 
         # Convert to domain objects
         editorials = [
-            Editorial(problem_id=pid, analysis_text=text)
-            for pid, text in problem_solutions.items()
+            Editorial(problem_id=pid, analysis_text=text) for pid, text in problem_solutions.items()
         ]
 
         return ContestEditorial(contest_id=contest_id, editorials=editorials)
@@ -180,23 +174,23 @@ class EditorialContentParser:
             Cleaned text
         """
         # Remove excessive whitespace
-        text = re.sub(r'\n\s*\n\s*\n+', '\n\n', text)
+        text = re.sub(r"\n\s*\n\s*\n+", "\n\n", text)
 
         # Remove common UI elements and garbage text
         remove_patterns = [
-            r'Material\s+You\s+Should\s+Know.*?(?=\n|\Z)',  # Common header
-            r'Problem\s+tags\s*:.*?(?=\n|\Z)',  # Tags section
-            r'Download\s+as\s+.*?(?=\n|\Z)',  # Download links
-            r'Submit\s+a\s+ticket.*?(?=\n|\Z)',  # Support links
-            r'Related\s+topics.*?(?=\n|\Z)',  # Related topics
+            r"Material\s+You\s+Should\s+Know.*?(?=\n|\Z)",  # Common header
+            r"Problem\s+tags\s*:.*?(?=\n|\Z)",  # Tags section
+            r"Download\s+as\s+.*?(?=\n|\Z)",  # Download links
+            r"Submit\s+a\s+ticket.*?(?=\n|\Z)",  # Support links
+            r"Related\s+topics.*?(?=\n|\Z)",  # Related topics
         ]
 
         for pattern in remove_patterns:
-            text = re.sub(pattern, '', text, flags=re.IGNORECASE | re.MULTILINE)
+            text = re.sub(pattern, "", text, flags=re.IGNORECASE | re.MULTILINE)
 
         # Normalize spacing
-        text = re.sub(r'[ \t]+', ' ', text)  # Multiple spaces to single space
-        text = re.sub(r'\n\s+', '\n', text)  # Space after newline to just newline
+        text = re.sub(r"[ \t]+", " ", text)  # Multiple spaces to single space
+        text = re.sub(r"\n\s+", "\n", text)  # Space after newline to just newline
 
         return text.strip()
 
@@ -220,11 +214,7 @@ class EditorialContentParser:
 
         return "\n\n".join(combined_parts)
 
-    async def _segment_by_problems(
-        self,
-        full_text: str,
-        contest_id: str
-    ) -> Dict[str, str]:
+    async def _segment_by_problems(self, full_text: str, contest_id: str) -> Dict[str, str]:
         """
         Use LLM to segment editorial text into problem-specific solutions.
 
@@ -260,9 +250,7 @@ class EditorialContentParser:
             raise LLMSegmentationError(contest_id) from e
 
     async def _ask_llm_for_segmentation(
-        self,
-        editorial_text: str,
-        contest_id: str
+        self, editorial_text: str, contest_id: str
     ) -> Dict[str, str]:
         """
         Ask LLM to segment editorial text into problem solutions.
@@ -278,7 +266,9 @@ class EditorialContentParser:
         max_chars = 40000  # Conservative limit
         if len(editorial_text) > max_chars:
             editorial_text = editorial_text[:max_chars] + "\n\n[CONTENT TRUNCATED DUE TO LENGTH]"
-            logger.warning(f"Truncated editorial text for contest {contest_id} to {max_chars} chars")
+            logger.warning(
+                f"Truncated editorial text for contest {contest_id} to {max_chars} chars"
+            )
 
         system_prompt = """You are an expert at analyzing Codeforces contest editorials.
 Your task is to identify each individual problem's solution section and extract the complete analysis text for each one.
@@ -329,7 +319,7 @@ Extract and segment the solution for each individual problem. Return JSON with p
         # Parse JSON response
         try:
             # Extract JSON from response - LLM might prepend explanatory text
-            json_start = response.find('{')
+            json_start = response.find("{")
             if json_start == -1:
                 raise ValueError("No JSON object found in response")
 

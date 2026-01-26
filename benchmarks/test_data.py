@@ -70,7 +70,14 @@ BENCHMARK_TEST_CASES: list[TestCase] = [
     },
     {
         "contest_id": "36",
-        "expected_editorial": ["https://codeforces.com/blog/entry/773", "https://codeforces.com/blog/entry/774", "https://codeforces.com/blog/entry/768", "https://codeforces.com/blog/entry/769", "https://codeforces.com/blog/entry/770", "https://codeforces.com/blog/entry/771"],
+        "expected_editorial": [
+            "https://codeforces.com/blog/entry/773",
+            "https://codeforces.com/blog/entry/774",
+            "https://codeforces.com/blog/entry/768",
+            "https://codeforces.com/blog/entry/769",
+            "https://codeforces.com/blog/entry/770",
+            "https://codeforces.com/blog/entry/771",
+        ],
         "description": "Codeforces Beta Round 36",
         "difficulty": "easy",
     },
