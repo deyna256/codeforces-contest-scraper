@@ -8,6 +8,7 @@ class Editorial:
 
     problem_id: str
     analysis_text: str
+    contest_id: str | None = None  # Contest ID for disambiguation in multi-contest editorials
 
 
 @dataclass

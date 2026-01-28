@@ -37,7 +37,10 @@ class EditorialContentParser:
         self.llm_client = llm_client
 
     async def parse_editorial_content(
-        self, contest_id: str, editorial_urls: List[str]
+        self,
+        contest_id: str,
+        editorial_urls: List[str],
+        expected_problems: List[tuple[str, str]] | None = None,
     ) -> ContestEditorial:
         """
         Parse editorial content and segment into individual problem solutions.
@@ -45,6 +48,7 @@ class EditorialContentParser:
         Args:
             contest_id: Contest identifier
             editorial_urls: List of editorial blog entry URLs
+            expected_problems: Optional list of (contest_id, problem_letter) tuples for context
 
         Returns:
             ContestEditorial with segmented problem analyses
@@ -80,11 +84,14 @@ class EditorialContentParser:
         combined_content = await self._combine_editorial_content(all_content)
 
         # Use LLM to segment into problem-specific solutions
-        problem_solutions = await self._segment_by_problems(combined_content, contest_id)
+        problem_solutions = await self._segment_by_problems(
+            combined_content, contest_id, expected_problems
+        )
 
         # Convert to domain objects
         editorials = [
-            Editorial(problem_id=pid, analysis_text=text) for pid, text in problem_solutions.items()
+            Editorial(contest_id=cid, problem_id=pid, analysis_text=text)
+            for (cid, pid), text in problem_solutions.items()
         ]
 
         return ContestEditorial(contest_id=contest_id, editorials=editorials)
@@ -213,16 +220,19 @@ class EditorialContentParser:
 
         return "\n\n".join(combined_parts)
 
-    async def _segment_by_problems(self, full_text: str, contest_id: str) -> Dict[str, str]:
+    async def _segment_by_problems(
+        self, full_text: str, contest_id: str, expected_problems: List[tuple[str, str]] | None
+    ) -> Dict[tuple[str, str], str]:
         """
         Use LLM to segment editorial text into problem-specific solutions.
 
         Args:
             full_text: Combined editorial text content
             contest_id: Contest identifier for context
+            expected_problems: Optional list of (contest_id, problem_letter) tuples
 
         Returns:
-            Dictionary mapping problem IDs (A, B, C, etc.) to solution text
+            Dictionary mapping (contest_id, problem_letter) tuples to solution text
 
         Raises:
             LLMSegmentationError: If LLM fails to segment properly
@@ -234,7 +244,7 @@ class EditorialContentParser:
             raise LLMSegmentationError(contest_id, "Content too short for segmentation")
 
         try:
-            result = await self._ask_llm_for_segmentation(full_text, contest_id)
+            result = await self._ask_llm_for_segmentation(full_text, contest_id, expected_problems)
 
             if not result or not isinstance(result, dict):
                 raise LLMSegmentationError(contest_id, f"Invalid LLM response format: {result}")
@@ -249,17 +259,18 @@ class EditorialContentParser:
             raise LLMSegmentationError(contest_id) from e
 
     async def _ask_llm_for_segmentation(
-        self, editorial_text: str, contest_id: str
-    ) -> Dict[str, str]:
+        self, editorial_text: str, contest_id: str, expected_problems: List[tuple[str, str]] | None
+    ) -> Dict[tuple[str, str], str]:
         """
         Ask LLM to segment editorial text into problem solutions.
 
         Args:
             editorial_text: Full editorial text content
             contest_id: Contest ID for context
+            expected_problems: Optional list of (contest_id, problem_letter) tuples
 
         Returns:
-            Dictionary mapping problem letters to solution texts
+            Dictionary mapping (contest_id, problem_letter) tuples to solution texts
         """
         assert self.llm_client is not None, "LLM client must be initialized"
 
@@ -272,41 +283,48 @@ class EditorialContentParser:
             )
 
         system_prompt = """You are an expert at analyzing Codeforces contest editorials.
-Your task is to identify each individual problem's solution section and extract the complete analysis text for each one.
+Your task is to identify each individual problem's solution and extract the EXACT original text.
 
-IMPORTANT:
-- Identify problems by their letters (A, B, C, D, E, F, G, H, I, J, K, L, M, etc.)
-- Extract the COMPLETE solution/analysis text for each problem
-- Include mathematical notation, code snippets, and all technical details
-- Do NOT include contest announcements, rating changes, tournament results, or participant lists
-- Skip meta-information that's not part of specific problem solutions
+CRITICAL INSTRUCTIONS:
+1. Editorials often cover MULTIPLE contests (e.g., Div1 + Div2) in ONE blog post.
+   You MUST identify the contest ID for each problem to avoid confusion.
 
-The editorial may contain:
-- Multiple problems in one cohesive text block
-- Section headers like "Problem A", "A.", "Задача A" (Russian), etc.
-- Implicit problem boundaries
-- Multiple editorials combined together (separated by === EDITORIAL SOURCE ===)
+2. EXTRACT THE EXACT ORIGINAL TEXT - DO NOT REPHRASE, SUMMARIZE, OR MODIFY!
+   Copy the author's text verbatim, word-for-word, including:
+   - All mathematical notation and formulas
+   - All code snippets and examples
+   - All technical details and explanations
+   - The complete solution from start to finish
 
-Return JSON format ONLY:
+   Your job is to LOCATE and EXTRACT, not to rewrite or summarize!
+
+Return this JSON format:
 {
-  "A": "Complete solution text for problem A...",
-  "B": "Complete solution text for problem B...",
-  "C": "Complete solution text for problem C..."
+  "problems": [
+    {"contest_id": "1900", "problem_id": "A", "analysis": "EXACT original text from editorial..."},
+    {"contest_id": "1901", "problem_id": "A", "analysis": "EXACT original text from editorial..."}
+  ]
 }
 
-Notes:
-- Use uppercase letters A, B, C, etc. as keys
-- Preserve all technical content (equations, algorithms, code)
-- If a problem has no clear solution section, omit it from the result
-- Empty sections should not be included
-- Return valid JSON with no extra text or explanation"""
+Guidelines:
+- Look for contest IDs in: problem headers (e.g., "1900A"), section titles, blog text
+- Use uppercase letters for problem_id (A, B, C, etc.)
+- contest_id should be numeric string (e.g., "1900", "1901")
+- Copy the COMPLETE original text for each problem - do not shorten or paraphrase
+- If contest ID is ambiguous, infer from context or use the primary contest ID
+- Return valid JSON only, no extra text"""
 
         user_prompt = f"""Contest ID: {contest_id}
+
+Expected problems: {self._format_expected_problems(expected_problems)}
 
 Full editorial text:
 {editorial_text}
 
-Extract and segment the solution for each individual problem. Return JSON with problem letters as keys."""
+IMPORTANT: Extract the EXACT original text for each problem's solution. Copy word-for-word from the editorial above.
+Do NOT rephrase, summarize, or shorten the text. Include everything: math formulas, code, explanations.
+
+Return JSON with contest_id, problem_id, and the COMPLETE original analysis text."""
 
         logger.debug(f"Sending LLM segmentation request for contest {contest_id}")
 
@@ -314,42 +332,11 @@ Extract and segment the solution for each individual problem. Return JSON with p
             prompt=user_prompt,
             system_prompt=system_prompt,
             temperature=0.0,  # Deterministic segmentation
-            max_tokens=8000,  # Allow for detailed solutions
+            max_tokens=16000,  # Allow for complete original text without truncation
         )
 
-        # Parse JSON response
-        try:
-            # Extract JSON from response - LLM might prepend explanatory text
-            json_start = response.find("{")
-            if json_start == -1:
-                raise ValueError("No JSON object found in response")
-
-            json_content = response[json_start:].strip()
-            result = json.loads(json_content)
-
-            # Validate format
-            if not isinstance(result, dict):
-                raise ValueError("Response is not a dictionary")
-
-            # Clean up results
-            clean_result = {}
-            for key, value in result.items():
-                if isinstance(value, str) and value.strip():
-                    # Normalize problem ID (ensure uppercase, etc.)
-                    problem_id = self._normalize_problem_id(key)
-                    if problem_id:
-                        clean_result[problem_id] = value.strip()
-
-            logger.info(
-                f"LLM segmented editorial for contest {contest_id} into {len(clean_result)} problems: {list(clean_result.keys())}"
-            )
-
-            return clean_result
-
-        except (json.JSONDecodeError, ValueError) as e:
-            logger.error(f"Failed to parse LLM segmentation response: {e}")
-            logger.debug(f"LLM response was: {response}")
-            raise LLMSegmentationError(contest_id, response) from e
+        # Parse response with fallback
+        return self._parse_llm_response(response, contest_id, expected_problems)
 
     def _normalize_problem_id(self, problem_id: str) -> Optional[str]:
         """
@@ -371,9 +358,93 @@ Extract and segment the solution for each individual problem. Return JSON with p
         if len(problem_id) == 1 and problem_id.isalpha():
             return problem_id
 
-        # Handle patterns like "A.", "Problem A", "Задача A"
+        # Handle patterns like "Problem A", "Задача A" - extract the last letter
+        if problem_id.startswith("PROBLEM ") or problem_id.startswith("ЗАДАЧА "):
+            parts = problem_id.split()
+            if len(parts) >= 2 and parts[-1].isalpha() and len(parts[-1]) == 1:
+                return parts[-1]
+
+        # Handle patterns like "A.", "1900A"
+        # First check if it ends with a letter (like "1900A")
+        if problem_id and problem_id[-1].isalpha():
+            return problem_id[-1]
+
+        # Handle patterns where first character is the letter
         first_char = problem_id[0]
         if first_char.isalpha():
             return first_char
 
         return None
+
+    def _format_expected_problems(self, expected_problems: List[tuple[str, str]] | None) -> str:
+        """Format expected problems list for LLM prompt."""
+        if not expected_problems:
+            return "Unknown (parse all problems found)"
+
+        formatted = ", ".join([f"{cid}/{pid}" for cid, pid in expected_problems])
+        return f"{formatted}"
+
+    def _parse_llm_response(
+        self,
+        response: str,
+        primary_contest_id: str,
+        expected_problems: List[tuple[str, str]] | None,
+    ) -> Dict[tuple[str, str], str]:
+        """
+        Parse LLM response with format detection and fallback.
+
+        Returns:
+            Dict mapping (contest_id, problem_letter) -> analysis_text
+        """
+        try:
+            json_start = response.find("{")
+            if json_start == -1:
+                raise ValueError("No JSON found")
+
+            json_content = response[json_start:].strip()
+            result = json.loads(json_content)
+
+            # Try new format first
+            if "problems" in result and isinstance(result["problems"], list):
+                return self._parse_new_format(result["problems"])
+
+            # Fallback to old format
+            logger.warning("LLM returned old format (no contest_id), using fallback")
+            return self._parse_old_format(result, primary_contest_id)
+
+        except (json.JSONDecodeError, ValueError) as e:
+            logger.error(f"Failed to parse LLM response: {e}")
+            raise LLMSegmentationError(primary_contest_id, response) from e
+
+    def _parse_new_format(self, problems: list) -> Dict[tuple[str, str], str]:
+        """Parse new format: [{"contest_id": "1900", "problem_id": "A", "analysis": "..."}]"""
+        clean_result = {}
+        for item in problems:
+            if not isinstance(item, dict):
+                continue
+
+            contest_id = str(item.get("contest_id", "")).strip()
+            problem_id = self._normalize_problem_id(item.get("problem_id", ""))
+            analysis = item.get("analysis", "").strip()
+
+            if contest_id and problem_id and analysis:
+                key = (contest_id, problem_id)
+                clean_result[key] = analysis
+
+        logger.info(f"Parsed {len(clean_result)} editorials with contest IDs")
+        return clean_result
+
+    def _parse_old_format(
+        self, result: dict, primary_contest_id: str
+    ) -> Dict[tuple[str, str], str]:
+        """Parse old format: {"A": "...", "B": "..."}"""
+        clean_result = {}
+        for key, value in result.items():
+            if isinstance(value, str) and value.strip():
+                problem_id = self._normalize_problem_id(key)
+                if problem_id:
+                    # Use None for contest_id to signal fallback matching
+                    clean_result[(None, problem_id)] = value.strip()
+
+        logger.warning(f"Parsed {len(clean_result)} editorials without contest IDs (old format)")
+        return clean_result

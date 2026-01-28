@@ -103,15 +103,57 @@ class ContestService:
         # Try to fetch editorial content and populate explanations
         if self.editorial_parser and editorials:
             try:
-                editorial_data = await self.get_editorial_content(contest_id, editorials)
-                # Create a map from problem_id to explanation
-                explanation_map = {
-                    edit.problem_id: edit.analysis_text for edit in editorial_data.editorials
-                }
+                # Build expected problems list: [(contest_id, letter), ...]
+                expected_problems = [
+                    (problem.contest_id, problem.id.upper()) for problem in contest_problems
+                ]
+
+                # Parse editorial with context
+                editorial_data = await self.editorial_parser.parse_editorial_content(
+                    contest_id, editorials, expected_problems=expected_problems
+                )
+
+                # Create explanation map with contest-aware filtering
+                explanation_map = {}
+                other_contest_count = 0
+                no_contest_id_count = 0
+
+                for edit in editorial_data.editorials:
+                    problem_letter = edit.problem_id.upper()
+
+                    # Prefer exact contest_id match
+                    if edit.contest_id == contest_id:
+                        explanation_map[problem_letter] = edit.analysis_text
+
+                    # Fallback: if no contest_id, use letter-only matching (with warning)
+                    elif edit.contest_id is None and problem_letter not in explanation_map:
+                        logger.warning(
+                            f"Editorial for problem {problem_letter} has no contest_id, "
+                            f"using fallback matching (may be incorrect for multi-contest editorials)"
+                        )
+                        explanation_map[problem_letter] = edit.analysis_text
+                        no_contest_id_count += 1
+
+                    # Explicitly skip editorials from other contests
+                    elif edit.contest_id and edit.contest_id != contest_id:
+                        logger.debug(
+                            f"Skipping editorial {edit.contest_id}/{problem_letter} "
+                            f"(requested: {contest_id})"
+                        )
+                        other_contest_count += 1
+
                 # Update problems with explanations
                 for problem in contest_problems:
                     problem.explanation = explanation_map.get(problem.id.upper())
-                logger.info(f"Added editorial explanations for contest {contest_id}")
+
+                matched_count = len([p for p in contest_problems if p.explanation])
+                logger.info(
+                    f"Matched {matched_count}/{len(contest_problems)} problems with editorials "
+                    f"(parsed {len(editorial_data.editorials)} total, "
+                    f"skipped {other_contest_count} from other contests, "
+                    f"{no_contest_id_count} without contest_id)"
+                )
+
             except Exception as e:
                 logger.warning(f"Failed to fetch editorial content for contest {contest_id}: {e}")
                 # Continue without explanations
@@ -138,11 +180,19 @@ class ContestService:
     ) -> ContestProblem | None:
         """Fetch detailed information for a single problem."""
         try:
-            # Get rating and tags from problemset.problems
-            key = (contest_id, problem_id)
-            problem_metadata = problem_map.get(key, {})
-            rating = problem_metadata.get("rating")
-            tags = problem_metadata.get("tags", [])
+            # Try to get rating and tags from contest.standings first (api_problem_data)
+            # If not available, fall back to problemset.problems
+            rating = api_problem_data.get("rating")
+            tags = api_problem_data.get("tags", [])
+
+            # Fallback to problemset.problems if not in standings
+            if rating is None or not tags:
+                key = (contest_id, problem_id)
+                problem_metadata = problem_map.get(key, {})
+                if rating is None:
+                    rating = problem_metadata.get("rating")
+                if not tags:
+                    tags = problem_metadata.get("tags", [])
 
             # Get problem name from API data
             problem_title = api_problem_data.get("name", f"Problem {problem_id}")
