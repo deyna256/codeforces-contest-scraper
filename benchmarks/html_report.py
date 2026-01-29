@@ -24,6 +24,16 @@ def generate_html_report(report_data: dict[str, Any], output_path: Path) -> Path
     except (ValueError, KeyError):
         formatted_date = timestamp_str
 
+    # Calculate aggregate token stats
+    total_tokens_all = sum(model.get("total_tokens", 0) for model in report_data["summary"])
+    total_cost_all = sum(model.get("estimated_cost_usd", 0) for model in report_data["summary"])
+    avg_tokens_all = (
+        sum(model.get("avg_tokens_per_test", 0) for model in report_data["summary"])
+        / len(report_data["summary"])
+        if report_data["summary"]
+        else 0
+    )
+
     # Generate comparison table rows
     comparison_rows = []
     for i, model in enumerate(report_data["summary"]):
@@ -43,30 +53,27 @@ def generate_html_report(report_data: dict[str, Any], output_path: Path) -> Path
             else "metric-poor"
         )
 
-        # Format pricing information
-        pricing_info = "N/A"
-        price_class = ""
-        if model.get("pricing"):
-            avg_price = model["pricing"]["avg_price_per_token"]
-            pricing_info = f"{avg_price:.0e}"
-            # Color coding: green for cheap, yellow for medium, red for expensive
-            if avg_price < 1e-6:
-                price_class = "metric-good"  # Very cheap
-            elif avg_price < 1e-5:
-                price_class = "metric-medium"  # Medium
-            else:
-                price_class = ""  # Expensive (no special class)
+        # Format token and cost information
+        avg_tokens = model.get("avg_tokens_per_test", 0)
+        total_tokens = model.get("total_tokens", 0)
+        cost_str = (
+            f"${model.get('estimated_cost_usd', 0):.4f}"
+            if model.get("estimated_cost_usd", 0) > 0
+            else "N/A"
+        )
 
         row = f"""<tr>
             <td><span class="rank{rank_class}">{i + 1}</span></td>
             <td><strong>{model["display_name"]}</strong><br><small style="color: #7f8c8d;">{model["model_name"]}</small></td>
             <td><span class="metric {accuracy_class}">{model["accuracy"]:.1f}%</span></td>
             <td>{model["avg_latency_ms"]:.0f}ms</td>
+            <td>{avg_tokens:.0f}</td>
+            <td>{total_tokens:,}</td>
+            <td>{cost_str}</td>
             <td>{model["precision"]:.1f}%</td>
             <td>{model["recall"]:.1f}%</td>
             <td><span class="metric {f1_class}">{model["f1_score"]:.1f}%</span></td>
             <td>{model["successful_tests"]}/{model["successful_tests"] + model["failed_tests"]}</td>
-            <td><span class="metric {price_class}">{pricing_info}</span></td>
         </tr>"""
         comparison_rows.append(row)
 
@@ -98,14 +105,27 @@ def generate_html_report(report_data: dict[str, Any], output_path: Path) -> Path
                 result_class = "test-incorrect"
                 result_text = "✗ Incorrect"
 
+            # Format token information for this test
+            prompt_tokens = test.get("prompt_tokens", 0)
+            completion_tokens = test.get("completion_tokens", 0)
+            total_tokens = test.get("total_tokens", 0)
+
             test_row = f"""<tr>
                 <td><span class="contest-id">{test["contest_id"]}</span></td>
                 <td><small>{expected_text}</small></td>
                 <td><small>{found_text}</small></td>
                 <td><span class="test-result {result_class}">{result_text}</span></td>
                 <td>{test["latency_ms"]:.0f}ms</td>
+                <td>{total_tokens:,}</td>
+                <td><small>{prompt_tokens:,} / {completion_tokens:,}</small></td>
             </tr>"""
             test_rows.append(test_row)
+
+        # Format token metrics for detail section
+        avg_tokens_detail = model.get("avg_tokens_per_test", 0)
+        total_tokens_detail = model.get("total_tokens", 0)
+        cost_detail = model.get("estimated_cost_usd", 0)
+        cost_str_detail = f"${cost_detail:.4f}" if cost_detail > 0 else "N/A"
 
         section = f"""<div class="model-details" id="model-{model_id}">
             <div class="model-name">{model["display_name"]}</div>
@@ -117,6 +137,18 @@ def generate_html_report(report_data: dict[str, Any], output_path: Path) -> Path
                 <div class="metric-box">
                     <div class="metric-box-label">Avg Latency</div>
                     <div class="metric-box-value">{model["avg_latency_ms"]:.0f}ms</div>
+                </div>
+                <div class="metric-box">
+                    <div class="metric-box-label">Avg Tokens</div>
+                    <div class="metric-box-value">{avg_tokens_detail:.0f}</div>
+                </div>
+                <div class="metric-box">
+                    <div class="metric-box-label">Total Tokens</div>
+                    <div class="metric-box-value">{total_tokens_detail:,}</div>
+                </div>
+                <div class="metric-box">
+                    <div class="metric-box-label">Est. Cost</div>
+                    <div class="metric-box-value">{cost_str_detail}</div>
                 </div>
                 <div class="metric-box">
                     <div class="metric-box-label">F1 Score</div>
@@ -136,6 +168,8 @@ def generate_html_report(report_data: dict[str, Any], output_path: Path) -> Path
                         <th>Found</th>
                         <th>Result</th>
                         <th>Latency</th>
+                        <th>Tokens</th>
+                        <th>Prompt / Completion</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -228,6 +262,15 @@ def generate_html_report(report_data: dict[str, Any], output_path: Path) -> Path
             border-collapse: collapse;
             margin-bottom: 30px;
             font-size: 14px;
+            overflow-x: auto;
+            display: block;
+        }}
+
+        table thead,
+        table tbody {{
+            display: table;
+            width: 100%;
+            table-layout: fixed;
         }}
 
         th {{
@@ -402,6 +445,18 @@ def generate_html_report(report_data: dict[str, Any], output_path: Path) -> Path
                 <div class="info-label">Test Cases</div>
                 <div class="info-value">{report_data["benchmark_info"]["test_cases"]}</div>
             </div>
+            <div class="info-card">
+                <div class="info-label">Total Tokens Used</div>
+                <div class="info-value">{total_tokens_all:,}</div>
+            </div>
+            <div class="info-card">
+                <div class="info-label">Avg Tokens/Test</div>
+                <div class="info-value">{avg_tokens_all:.0f}</div>
+            </div>
+            <div class="info-card">
+                <div class="info-label">Total Est. Cost</div>
+                <div class="info-value">${total_cost_all:.4f}</div>
+            </div>
         </div>
 
         <h2>📊 Model Comparison</h2>
@@ -412,11 +467,13 @@ def generate_html_report(report_data: dict[str, Any], output_path: Path) -> Path
                     <th onclick="sortTable(1)">Model</th>
                     <th onclick="sortTable(2)">Accuracy <span class="sort-indicator"></span></th>
                     <th onclick="sortTable(3)">Avg Latency <span class="sort-indicator"></span></th>
-                    <th onclick="sortTable(4)">Precision <span class="sort-indicator"></span></th>
-                    <th onclick="sortTable(5)">Recall <span class="sort-indicator"></span></th>
-                    <th onclick="sortTable(6)">F1 Score <span class="sort-indicator"></span></th>
-                    <th onclick="sortTable(7)">Success Rate <span class="sort-indicator"></span></th>
-                    <th onclick="sortTable(8)">Avg Price/Token <span class="sort-indicator"></span></th>
+                    <th onclick="sortTable(4)">Avg Tokens <span class="sort-indicator"></span></th>
+                    <th onclick="sortTable(5)">Total Tokens <span class="sort-indicator"></span></th>
+                    <th onclick="sortTable(6)">Est. Cost <span class="sort-indicator"></span></th>
+                    <th onclick="sortTable(7)">Precision <span class="sort-indicator"></span></th>
+                    <th onclick="sortTable(8)">Recall <span class="sort-indicator"></span></th>
+                    <th onclick="sortTable(9)">F1 Score <span class="sort-indicator"></span></th>
+                    <th onclick="sortTable(10)">Success Rate <span class="sort-indicator"></span></th>
                 </tr>
             </thead>
             <tbody>

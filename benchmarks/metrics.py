@@ -19,6 +19,9 @@ class TestResult:
     is_correct: bool
     latency_ms: float
     error: str | None = None
+    prompt_tokens: int = 0
+    completion_tokens: int = 0
+    total_tokens: int = 0
 
 
 @dataclass
@@ -40,7 +43,12 @@ class BenchmarkMetrics:
     false_positives: int  # Found editorial when it doesn't exist
     false_negatives: int  # Didn't find editorial when it exists
     true_negatives: int  # Correctly identified no editorial
+    total_prompt_tokens: int = 0  # Total prompt tokens used
+    total_completion_tokens: int = 0  # Total completion tokens used
+    total_tokens: int = 0  # Total tokens used
+    avg_tokens_per_test: float = 0.0  # Average tokens per test
     pricing: Optional[ModelPricing] = None  # Pricing information from OpenRouter
+    estimated_cost: float = 0.0  # Estimated cost in USD based on token usage
     test_results: list[TestResult] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
@@ -80,6 +88,13 @@ class BenchmarkMetrics:
                 "f1_score": round(self._calculate_f1(), 2),
             },
             "pricing": pricing_dict,
+            "token_usage": {
+                "total_prompt_tokens": self.total_prompt_tokens,
+                "total_completion_tokens": self.total_completion_tokens,
+                "total_tokens": self.total_tokens,
+                "avg_tokens_per_test": round(self.avg_tokens_per_test, 2),
+                "estimated_cost_usd": round(self.estimated_cost, 4),
+            },
             "test_results": [
                 {
                     "contest_id": r.contest_id,
@@ -87,6 +102,9 @@ class BenchmarkMetrics:
                     "found": r.found_editorial,
                     "correct": r.is_correct,
                     "latency_ms": round(r.latency_ms, 2),
+                    "prompt_tokens": r.prompt_tokens,
+                    "completion_tokens": r.completion_tokens,
+                    "total_tokens": r.total_tokens,
                     "error": r.error,
                 }
                 for r in self.test_results
@@ -149,6 +167,14 @@ class BenchmarkMetrics:
         print(f"  Precision: {self._calculate_precision():.1f}%")
         print(f"  Recall:    {self._calculate_recall():.1f}%")
         print(f"  F1 Score:  {self._calculate_f1():.1f}%")
+        print()
+        print("Token Usage:")
+        print(f"  Total Tokens: {self.total_tokens:,}")
+        print(f"  Prompt Tokens: {self.total_prompt_tokens:,}")
+        print(f"  Completion Tokens: {self.total_completion_tokens:,}")
+        print(f"  Avg Tokens/Test: {self.avg_tokens_per_test:.0f}")
+        if self.estimated_cost > 0:
+            print(f"  Estimated Cost: ${self.estimated_cost:.4f}")
         print(f"{'=' * 70}\n")
 
 
@@ -199,6 +225,12 @@ def calculate_metrics(
         if len(r.expected_editorial) == 0 and len(r.found_editorial) == 0 and r.is_correct
     )
 
+    # Calculate token usage
+    total_prompt_tokens = sum(r.prompt_tokens for r in results)
+    total_completion_tokens = sum(r.completion_tokens for r in results)
+    total_tokens_used = sum(r.total_tokens for r in results)
+    avg_tokens = total_tokens_used / total_tests if total_tests > 0 else 0.0
+
     return BenchmarkMetrics(
         model_name=model_name,
         display_name=display_name,
@@ -215,5 +247,9 @@ def calculate_metrics(
         false_positives=fp,
         false_negatives=fn,
         true_negatives=tn,
+        total_prompt_tokens=total_prompt_tokens,
+        total_completion_tokens=total_completion_tokens,
+        total_tokens=total_tokens_used,
+        avg_tokens_per_test=avg_tokens,
         test_results=results,
     )

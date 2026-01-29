@@ -6,6 +6,7 @@ import sys
 import time
 from collections import Counter
 from pathlib import Path
+from typing import Optional
 
 # Add project root and src to path for imports
 project_root = Path(__file__).parent.parent
@@ -27,8 +28,45 @@ from benchmarks.report import (
 )
 from benchmarks.test_data import BENCHMARK_TEST_CASES
 from infrastructure.http_client import AsyncHTTPClient
-from infrastructure.llm_client import LLMError, OpenRouterClient
+from infrastructure.llm_client import LLMError, OpenRouterClient, TokenUsage
 from infrastructure.parsers.llm_editorial_finder import LLMEditorialFinder
+
+
+class TrackedLLMClient(OpenRouterClient):
+    """LLM client wrapper that tracks token usage."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.last_usage: Optional[TokenUsage] = None
+
+    async def complete(self, *args, **kwargs) -> str:
+        """Override complete to track token usage."""
+        response = await self.complete_with_usage(*args, **kwargs)
+        self.last_usage = response.usage
+
+        # Debug logging
+        if response.usage:
+            logger.debug(
+                f"Token usage for {self.model}: "
+                f"prompt={response.usage.prompt_tokens}, "
+                f"completion={response.usage.completion_tokens}, "
+                f"total={response.usage.total_tokens}"
+            )
+        else:
+            logger.warning(f"No token usage data returned from {self.model}")
+
+        return response.content
+
+    def get_last_usage(self) -> TokenUsage:
+        """Get token usage from last request."""
+        if self.last_usage is None:
+            logger.warning("get_last_usage called but last_usage is None - returning zeros")
+            return TokenUsage(prompt_tokens=0, completion_tokens=0, total_tokens=0)
+        return self.last_usage
+
+    def reset_usage(self):
+        """Reset usage tracking."""
+        self.last_usage = None
 
 
 class BenchmarkRunner:
@@ -93,6 +131,11 @@ class BenchmarkRunner:
         # Average latency
         avg_latency = sum(r.latency_ms for r in results) / len(results)
 
+        # Average token usage
+        avg_prompt_tokens = sum(r.prompt_tokens for r in results) / len(results)
+        avg_completion_tokens = sum(r.completion_tokens for r in results) / len(results)
+        avg_total_tokens = sum(r.total_tokens for r in results) / len(results)
+
         # Determine correctness by majority vote
         correct_count = sum(1 for r in results if r.is_correct)
         is_correct = correct_count > (runs_per_test / 2)
@@ -113,6 +156,9 @@ class BenchmarkRunner:
             is_correct=is_correct,
             latency_ms=avg_latency,
             error=error,
+            prompt_tokens=int(avg_prompt_tokens),
+            completion_tokens=int(avg_completion_tokens),
+            total_tokens=int(avg_total_tokens),
         )
 
     async def _test_single_run(
@@ -137,10 +183,13 @@ class BenchmarkRunner:
         start_time = time.perf_counter()
         error = None
         found_editorial: list[str] = []
+        prompt_tokens = 0
+        completion_tokens = 0
+        total_tokens = 0
 
         try:
-            # Initialize LLM client with specific model
-            llm_client = OpenRouterClient(
+            # Initialize tracked LLM client with specific model
+            llm_client = TrackedLLMClient(
                 api_key=self.api_key,
                 model=model_config["name"],
                 timeout=model_config["timeout"],
@@ -155,6 +204,12 @@ class BenchmarkRunner:
 
             # Find editorial URLs
             found_editorial = await finder.find_editorial_url(soup, contest_id)
+
+            # Get token usage from last LLM call
+            usage = llm_client.get_last_usage()
+            prompt_tokens = usage.prompt_tokens
+            completion_tokens = usage.completion_tokens
+            total_tokens = usage.total_tokens
 
         except LLMError as e:
             error = f"LLM Error: {str(e)}"
@@ -176,6 +231,9 @@ class BenchmarkRunner:
             is_correct=is_correct,
             latency_ms=latency_ms,
             error=error,
+            prompt_tokens=prompt_tokens,
+            completion_tokens=completion_tokens,
+            total_tokens=total_tokens,
         )
 
     def _is_result_correct(self, expected: list[str], found: list[str]) -> bool:
@@ -334,6 +392,28 @@ async def main():
             # Attach pricing information if available
             pricing = pricing_manager.get_pricing_for_model(model_config["name"])
             metrics.pricing = pricing
+
+            # Calculate estimated cost if pricing is available
+            # Note: OpenRouter pricing is per token, not per million
+            if pricing:
+                prompt_cost = metrics.total_prompt_tokens * pricing.prompt_price
+                completion_cost = metrics.total_completion_tokens * pricing.completion_price
+                metrics.estimated_cost = prompt_cost + completion_cost
+
+                # Log with price converted to per-million format for readability
+                prompt_price_per_m = pricing.prompt_price * 1_000_000
+                completion_price_per_m = pricing.completion_price * 1_000_000
+                logger.info(
+                    f"Cost calculation for {model_config['name']}: "
+                    f"{metrics.total_prompt_tokens} prompt tokens × ${prompt_price_per_m:.2f}/1M = ${prompt_cost:.6f}, "
+                    f"{metrics.total_completion_tokens} completion tokens × ${completion_price_per_m:.2f}/1M = ${completion_cost:.6f}, "
+                    f"Total: ${metrics.estimated_cost:.6f}"
+                )
+            else:
+                logger.warning(
+                    f"No pricing data available for {model_config['name']}. "
+                    f"Cost will be shown as N/A. Tokens: {metrics.total_tokens}"
+                )
 
             all_metrics.append(metrics)
 

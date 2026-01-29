@@ -1,5 +1,6 @@
 """LLM client for OpenRouter API."""
 
+from dataclasses import dataclass
 from typing import Optional
 
 import httpx
@@ -9,6 +10,23 @@ class LLMError(Exception):
     """LLM API error."""
 
     pass
+
+
+@dataclass
+class TokenUsage:
+    """Token usage information from LLM response."""
+
+    prompt_tokens: int
+    completion_tokens: int
+    total_tokens: int
+
+
+@dataclass
+class LLMResponse:
+    """LLM response with content and token usage."""
+
+    content: str
+    usage: Optional[TokenUsage] = None
 
 
 class OpenRouterClient:
@@ -52,7 +70,32 @@ class OpenRouterClient:
             max_tokens: Maximum tokens to generate
 
         Returns:
-            Generated text completion
+            Generated text completion (for backward compatibility)
+
+        Raises:
+            LLMError: If API request fails
+        """
+        response = await self.complete_with_usage(prompt, system_prompt, temperature, max_tokens)
+        return response.content
+
+    async def complete_with_usage(
+        self,
+        prompt: str,
+        system_prompt: Optional[str] = None,
+        temperature: float = 0.0,
+        max_tokens: int = 500,
+    ) -> LLMResponse:
+        """
+        Generate completion using OpenRouter API with token usage information.
+
+        Args:
+            prompt: User prompt
+            system_prompt: Optional system prompt
+            temperature: Temperature for generation (0.0 = deterministic)
+            max_tokens: Maximum tokens to generate
+
+        Returns:
+            LLMResponse with content and token usage
 
         Raises:
             LLMError: If API request fails
@@ -98,7 +141,26 @@ class OpenRouterClient:
                 if not content:
                     raise LLMError("Empty content in OpenRouter API response")
 
-                return content.strip()
+                # Extract token usage information if available
+                usage_data = data.get("usage", {})
+                usage = None
+                if usage_data:
+                    usage = TokenUsage(
+                        prompt_tokens=usage_data.get("prompt_tokens", 0),
+                        completion_tokens=usage_data.get("completion_tokens", 0),
+                        total_tokens=usage_data.get("total_tokens", 0),
+                    )
+                else:
+                    # Debug: log when usage is missing
+                    import sys
+                    if "pytest" not in sys.modules:  # Don't log during tests
+                        from loguru import logger
+                        logger.warning(
+                            f"OpenRouter API response for model {self.model} is missing 'usage' field. "
+                            f"Response keys: {list(data.keys())}"
+                        )
+
+                return LLMResponse(content=content.strip(), usage=usage)
 
         except httpx.TimeoutException as e:
             raise LLMError(f"OpenRouter API timeout: {e}")

@@ -10,10 +10,14 @@ import httpx
 
 @dataclass
 class ModelPricing:
-    """Pricing information for a model."""
+    """Pricing information for a model.
 
-    prompt_price: float  # Price per token for input
-    completion_price: float  # Price per token for output
+    Note: Prices are per token (e.g., $0.0000008 per token),
+    not per million tokens. To display as "$/1M tokens", multiply by 1,000,000.
+    """
+
+    prompt_price: float  # Price per token for input (e.g., 0.0000008 = $0.80/1M)
+    completion_price: float  # Price per token for output (e.g., 0.000004 = $4.00/1M)
     currency: str = "USD"  # Assuming USD as most common
 
     @property

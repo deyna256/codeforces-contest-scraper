@@ -58,6 +58,11 @@ def generate_comparison_report(
             "successful_tests": metrics.successful_tests,
             "failed_tests": metrics.failed_tests,
             "avg_latency_ms": round(metrics.avg_latency_ms, 2),
+            "avg_tokens_per_test": round(metrics.avg_tokens_per_test, 2),
+            "total_tokens": metrics.total_tokens,
+            "total_prompt_tokens": metrics.total_prompt_tokens,
+            "total_completion_tokens": metrics.total_completion_tokens,
+            "estimated_cost_usd": round(metrics.estimated_cost, 4),
             "precision": round(metrics._calculate_precision(), 2),
             "recall": round(metrics._calculate_recall(), 2),
             "f1_score": round(metrics._calculate_f1(), 2),
@@ -74,6 +79,9 @@ def generate_comparison_report(
                     "found": r.found_editorial,
                     "correct": r.is_correct,
                     "latency_ms": round(r.latency_ms, 2),
+                    "prompt_tokens": r.prompt_tokens,
+                    "completion_tokens": r.completion_tokens,
+                    "total_tokens": r.total_tokens,
                     "error": r.error,
                 }
                 for r in metrics.test_results
@@ -138,25 +146,23 @@ def print_comparison_table(all_metrics: list[BenchmarkMetrics]) -> None:
 
     sorted_metrics = sorted(all_metrics, key=sort_key)
 
-    print("\n" + "=" * 120)
+    print("\n" + "=" * 150)
     print("BENCHMARK COMPARISON (Sorted: Accuracy → Price)")
-    print("=" * 120)
+    print("=" * 150)
     print(
-        f"{'Rank':<6} {'Model':<35} {'Accuracy':>10} {'Avg Latency':>15} {'F1 Score':>12} {'Avg Price/Token':>18}"
+        f"{'Rank':<6} {'Model':<30} {'Accuracy':>10} {'Avg Latency':>13} {'Avg Tokens':>12} {'Total Tokens':>14} {'Est. Cost':>12} {'F1 Score':>10}"
     )
-    print("-" * 120)
+    print("-" * 150)
 
     for rank, metrics in enumerate(sorted_metrics, 1):
-        if metrics.pricing:
-            pricing_info = f"{metrics.pricing.avg_price_per_token:.0e}"
-        else:
-            pricing_info = "         N/A"
+        cost_str = f"${metrics.estimated_cost:.4f}" if metrics.estimated_cost > 0 else "N/A"
 
         print(
-            f"{rank:<6} {metrics.display_name:<35} "
-            f"{metrics.accuracy:>9.1f}% {metrics.avg_latency_ms:>13.0f}ms "
-            f"{metrics._calculate_f1():>11.1f}% {pricing_info:>18}"
+            f"{rank:<6} {metrics.display_name:<30} "
+            f"{metrics.accuracy:>9.1f}% {metrics.avg_latency_ms:>11.0f}ms "
+            f"{metrics.avg_tokens_per_test:>11.0f} {metrics.total_tokens:>13,} "
+            f"{cost_str:>12} {metrics._calculate_f1():>9.1f}%"
         )
 
-    print("=" * 120)
+    print("=" * 150)
     print()
