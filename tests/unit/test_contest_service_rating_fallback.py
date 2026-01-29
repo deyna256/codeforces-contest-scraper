@@ -67,7 +67,6 @@ async def test_uses_rating_from_standings_when_available():
 @pytest.mark.asyncio
 async def test_falls_back_to_problemset_when_rating_missing():
     api_client = AsyncMock()
-    api_client = AsyncMock()
     page_parser = AsyncMock()
 
     # Mock API responses - contest.standings WITHOUT rating
@@ -114,7 +113,6 @@ async def test_falls_back_to_problemset_when_rating_missing():
 
 @pytest.mark.asyncio
 async def test_handles_missing_rating_in_both_sources():
-    api_client = AsyncMock()
     api_client = AsyncMock()
     page_parser = AsyncMock()
 

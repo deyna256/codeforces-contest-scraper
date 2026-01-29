@@ -8,7 +8,6 @@ from infrastructure.parsers.errors import EditorialNotFoundError
 @pytest.mark.asyncio
 async def test_continues_when_page_parser_fails():
     api_client = AsyncMock()
-    api_client = AsyncMock()
     page_parser = AsyncMock()
 
     # Mock API responses
@@ -42,7 +41,6 @@ async def test_continues_when_page_parser_fails():
 
 @pytest.mark.asyncio
 async def test_continues_when_problem_parsing_fails():
-    api_client = AsyncMock()
     api_client = AsyncMock()
     page_parser = AsyncMock()
 
@@ -87,7 +85,6 @@ async def test_continues_when_problem_parsing_fails():
 @pytest.mark.asyncio
 async def test_get_contest_by_url_success():
     api_client = AsyncMock()
-    api_client = AsyncMock()
     page_parser = AsyncMock()
     url_parser = MagicMock()
 
@@ -125,7 +122,6 @@ async def test_get_contest_by_url_success():
 @pytest.mark.asyncio
 async def test_get_editorial_content_no_parser():
     api_client = AsyncMock()
-    api_client = AsyncMock()
     page_parser = AsyncMock()
 
     # Create service without editorial parser
@@ -137,7 +133,6 @@ async def test_get_editorial_content_no_parser():
 
 @pytest.mark.asyncio
 async def test_get_editorial_content_no_urls_provided():
-    api_client = AsyncMock()
     api_client = AsyncMock()
     page_parser = AsyncMock()
     editorial_parser = AsyncMock()
@@ -162,7 +157,6 @@ async def test_get_editorial_content_no_urls_provided():
 
 @pytest.mark.asyncio
 async def test_get_editorial_content_with_urls():
-    api_client = AsyncMock()
     api_client = AsyncMock()
     page_parser = AsyncMock()
     editorial_parser = AsyncMock()
@@ -193,7 +187,6 @@ async def test_get_editorial_content_with_urls():
 
 @pytest.mark.asyncio
 async def test_get_editorial_content_fetches_urls():
-    api_client = AsyncMock()
     api_client = AsyncMock()
     page_parser = AsyncMock()
     editorial_parser = AsyncMock()
@@ -232,7 +225,6 @@ async def test_get_editorial_content_fetches_urls():
 
 @pytest.mark.asyncio
 async def test_continues_when_editorial_parsing_fails():
-    api_client = AsyncMock()
     api_client = AsyncMock()
     page_parser = AsyncMock()
     editorial_parser = AsyncMock()
