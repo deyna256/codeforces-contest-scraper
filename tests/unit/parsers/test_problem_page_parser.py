@@ -47,7 +47,10 @@ def mock_http_client() -> AsyncMock:
 
 @pytest.mark.asyncio
 async def test_parse_successful(mock_http_client) -> None:
-    identifier = ProblemIdentifier(contest_id="2183", problem_id="A", is_gym=False)
+    identifier = ProblemIdentifier(
+        contest_id="2183",
+        problem_id="A",
+    )
 
     parser = ProblemPageParser(mock_http_client)
     data = await parser.parse_problem_page(identifier=identifier)
@@ -63,7 +66,10 @@ async def test_parse_successful(mock_http_client) -> None:
 async def test_parse_no_editorial() -> None:
     client = AsyncMock()
     client.get_text.return_value = SAMPLE_HTML_NO_EDITORIAL
-    identifier = ProblemIdentifier(contest_id="9999", problem_id="B", is_gym=False)
+    identifier = ProblemIdentifier(
+        contest_id="9999",
+        problem_id="B",
+    )
 
     parser = ProblemPageParser(client)
     data = await parser.parse_problem_page(identifier=identifier)
