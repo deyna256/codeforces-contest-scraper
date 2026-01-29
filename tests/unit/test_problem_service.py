@@ -97,7 +97,7 @@ async def test_get_problem_by_url():
     problem_data.memory_limit = "512 megabytes"
     page_parser.parse_problem_page.return_value = problem_data
 
-    service = ProblemService(api_client=api_client, page_parser=page_parser, url_parser=url_parser)
+    service = ProblemService(api_client=api_client, page_parser=page_parser, url_parser=url_parser)  # type: ignore[arg-type]
 
     result = await service.get_problem_by_url("https://codeforces.com/problemset/problem/1500/C")
 

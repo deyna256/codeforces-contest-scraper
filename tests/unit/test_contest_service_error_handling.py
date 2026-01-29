@@ -108,7 +108,7 @@ async def test_get_contest_by_url_success():
         description="Description", time_limit="1s", memory_limit="256MB"
     )
 
-    service = ContestService(api_client=api_client, page_parser=page_parser, url_parser=url_parser)
+    service = ContestService(api_client=api_client, page_parser=page_parser, url_parser=url_parser)  # type: ignore[arg-type]
 
     # Execute
     contest = await service.get_contest_by_url("https://codeforces.com/contest/1500")
