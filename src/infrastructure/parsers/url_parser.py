@@ -20,8 +20,8 @@ class URLParser(URLParserProtocol):
 
     # Unified pattern matches: problemset/problem/1234/A
     PATTERN = r"codeforces\.(?:com|ru)/problemset/problem/(\d+)/([A-Z]\d*)"
-    # Contest pattern matches: contest/1234 or gym/1234
-    CONTEST_PATTERN = r"codeforces\.(?:com|ru)/(contest|gym)/(\d+)"
+    # Contest pattern matches: contest/1234 (gym not supported)
+    CONTEST_PATTERN = r"codeforces\.(?:com|ru)/contest/(\d+)"
 
     @classmethod
     def parse(cls, url: str) -> ProblemIdentifier:
@@ -44,7 +44,6 @@ class URLParser(URLParserProtocol):
             identifier = ProblemIdentifier(
                 contest_id=contest_id,
                 problem_id=problem_id,
-                is_gym=False,
             )
 
             logger.info(f"Parsed URL to problem: {identifier}")
@@ -83,13 +82,8 @@ class URLParser(URLParserProtocol):
 
         match = re.search(cls.CONTEST_PATTERN, url)
         if match:
-            contest_type, contest_id = match.groups()
-            is_gym = contest_type.lower() == "gym"
-
-            identifier = ContestIdentifier(
-                contest_id=contest_id,
-                is_gym=is_gym,
-            )
+            contest_id = match.group(1)
+            identifier = ContestIdentifier(contest_id=contest_id)
 
             logger.info(f"Parsed URL to contest: {identifier}")
             return identifier
@@ -97,7 +91,7 @@ class URLParser(URLParserProtocol):
         # No pattern matched
         raise URLParsingError(
             f"Unrecognized Codeforces contest URL format: {url}. "
-            "Expected format: https://codeforces.com/contest/<contest_id>"
+            "Expected format: https://codeforces.com/contest/<contest_id> (gym contests not supported)"
         )
 
     @classmethod
@@ -105,8 +99,7 @@ class URLParser(URLParserProtocol):
         """
         Build contest URL from identifier.
         """
-        path_type = "gym" if identifier.is_gym else "contest"
-        url = f"https://codeforces.com/{path_type}/{identifier.contest_id}"
+        url = f"https://codeforces.com/contest/{identifier.contest_id}"
 
         logger.debug(f"Built contest URL: {url}")
         return url

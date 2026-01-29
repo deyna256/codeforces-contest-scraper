@@ -25,12 +25,6 @@ class ContestNotFoundError(CodeforcesEditorialError):
     pass
 
 
-class GymContestError(CodeforcesEditorialError):
-    """Gym contests are not supported."""
-
-    pass
-
-
 class CacheError(CodeforcesEditorialError):
     """Cache operation error."""
 

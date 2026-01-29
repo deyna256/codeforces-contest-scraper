@@ -10,7 +10,6 @@ from infrastructure.errors import (
     CacheError,
     CodeforcesEditorialError,
     ContestNotFoundError,
-    GymContestError,
 )
 from infrastructure.parsers import ParsingError, URLParsingError
 from infrastructure.parsers.errors import (
@@ -51,7 +50,6 @@ def create_app() -> Litestar:
         EditorialContentFetchError: exception_to_http_response,
         EditorialContentParseError: exception_to_http_response,
         EditorialNotFoundError: exception_to_http_response,
-        GymContestError: exception_to_http_response,
         LLMSegmentationError: exception_to_http_response,
         ParsingError: exception_to_http_response,
         URLParsingError: exception_to_http_response,

@@ -11,7 +11,6 @@ from infrastructure.errors import (
     CacheError,
     CodeforcesEditorialError,
     ContestNotFoundError,
-    GymContestError,
 )
 from infrastructure.parsers import ParsingError, URLParsingError
 from api.schemas import ErrorResponse
@@ -23,11 +22,6 @@ def exception_to_http_response(request: Request, exc: Exception) -> Response[Err
     if isinstance(exc, URLParsingError):
         status_code = HTTP_400_BAD_REQUEST
         error_type = "URLParsingError"
-        detail = str(exc)
-
-    elif isinstance(exc, GymContestError):
-        status_code = HTTP_400_BAD_REQUEST
-        error_type = "GymContestError"
         detail = str(exc)
 
     elif isinstance(exc, ContestNotFoundError):

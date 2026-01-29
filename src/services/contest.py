@@ -7,7 +7,6 @@ from loguru import logger
 
 from domain.models.contest import Contest, ContestProblem
 from domain.models.editorial import ContestEditorial
-from infrastructure.errors import GymContestError
 from infrastructure.parsers import (
     ContestAPIClientProtocol,
     ContestPageParserProtocol,
@@ -45,12 +44,6 @@ class ContestService:
         result = standings_data.get("result", {})
         contest_data = result.get("contest", {})
         problems_list = result.get("problems", [])
-
-        # Validate: reject gym contests
-        contest_type = contest_data.get("type", "")
-        if "GYM" in contest_type.upper():
-            logger.error(f"Gym contest not supported: {contest_id}")
-            raise GymContestError(f"Gym contests are not supported: {contest_id}")
 
         # Get contest title from API
         contest_title = contest_data.get("name", f"Contest {contest_id}")
@@ -238,13 +231,8 @@ class ContestService:
         """Get contest by Codeforces contest URL."""
         logger.debug(f"Getting contest by URL: {url}")
 
-        # Parse URL to get identifier
+        # Parse URL to get identifier (gym URLs rejected by parser)
         identifier = self.url_parser.parse_contest_url(url)
-
-        # Validate: reject gym contests
-        if identifier.is_gym:
-            logger.error(f"Gym contest not supported: {identifier}")
-            raise GymContestError(f"Gym contests are not supported: {identifier}")
 
         return await self.get_contest(identifier.contest_id)
 
@@ -262,7 +250,6 @@ class ContestService:
             ContestEditorial with individual problem analyses
 
         Raises:
-            GymContestError: If contest is a gym contest
             EditorialNotFoundError: If no editorial URLs available
         """
         logger.debug(f"Getting editorial content for contest: {contest_id}")

@@ -40,7 +40,7 @@ class ContestPageParser:
         from infrastructure.parsers import URLParser
         from domain.models.identifiers import ContestIdentifier
 
-        url = URLParser.build_contest_url(ContestIdentifier(contest_id=contest_id, is_gym=False))
+        url = URLParser.build_contest_url(ContestIdentifier(contest_id=contest_id))
 
         if not self.http_client:
             raise ParsingError(f"HTTP client not initialized for {url}")
@@ -84,7 +84,6 @@ class ContestPageParser:
             identifier = ProblemIdentifier(
                 contest_id=contest_id,
                 problem_id=problem_id,
-                is_gym=False,
             )
 
             problem_data = ProblemData(
