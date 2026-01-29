@@ -1,5 +1,3 @@
-"""Tests for CodeforcesApiClient.get_problem method."""
-
 from unittest.mock import AsyncMock
 
 import pytest
@@ -18,7 +16,10 @@ async def test_get_problem_success(
 ) -> None:
     setup_mock_response({"status": "OK", "result": {"problems": [sample_problem_data]}})
 
-    identifier = ProblemIdentifier(contest_id="1000", problem_id="A", is_gym=False)
+    identifier = ProblemIdentifier(
+        contest_id="1000",
+        problem_id="A",
+    )
 
     problem = await codeforces_client.get_problem(identifier)
 

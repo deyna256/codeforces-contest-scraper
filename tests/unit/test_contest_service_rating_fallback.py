@@ -1,15 +1,11 @@
-"""Unit tests for contest service rating fallback logic."""
-
 import pytest
 from unittest.mock import AsyncMock, MagicMock
 
-from src.services.contest import ContestService
+from services.contest import ContestService
 
 
 @pytest.mark.asyncio
-async def test_service_uses_rating_from_standings_api():
-    """Test that service uses rating from contest.standings API when available."""
-    # Setup mocks
+async def test_uses_rating_from_standings_when_available():
     api_client = AsyncMock()
     page_parser = AsyncMock()
 
@@ -69,9 +65,8 @@ async def test_service_uses_rating_from_standings_api():
 
 
 @pytest.mark.asyncio
-async def test_service_falls_back_to_problemset_when_standings_missing_rating():
-    """Test fallback to problemset.problems when standings doesn't have rating."""
-    # Setup mocks
+async def test_falls_back_to_problemset_when_rating_missing():
+    api_client = AsyncMock()
     api_client = AsyncMock()
     page_parser = AsyncMock()
 
@@ -118,9 +113,8 @@ async def test_service_falls_back_to_problemset_when_standings_missing_rating():
 
 
 @pytest.mark.asyncio
-async def test_service_handles_missing_rating_in_both_sources():
-    """Test that service handles case when rating is missing in both sources."""
-    # Setup mocks
+async def test_handles_missing_rating_in_both_sources():
+    api_client = AsyncMock()
     api_client = AsyncMock()
     page_parser = AsyncMock()
 

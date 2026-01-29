@@ -1,5 +1,3 @@
-"""Fixtures for codeforces_client unit tests."""
-
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 

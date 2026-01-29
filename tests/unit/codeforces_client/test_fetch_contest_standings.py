@@ -1,5 +1,3 @@
-"""Tests for CodeforcesApiClient.fetch_contest_standings method."""
-
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -114,7 +112,7 @@ async def test_fetch_contest_standings_empty_problems(
         "The contest is not found in the database",
     ],
 )
-async def test_fetch_contest_standings_various_not_found_messages(
+async def test_fetch_contest_standings_handles_not_found(
     codeforces_client: CodeforcesApiClient,
     setup_mock_response,
     comment: str,

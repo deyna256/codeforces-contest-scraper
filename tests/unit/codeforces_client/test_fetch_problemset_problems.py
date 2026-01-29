@@ -1,5 +1,3 @@
-"""Tests for CodeforcesApiClient.fetch_problemset_problems method."""
-
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest

@@ -1,5 +1,3 @@
-"""Tests for CodeforcesApiClient.get_problem_details method."""
-
 import pytest
 
 from infrastructure.codeforces_client import CodeforcesApiClient
@@ -99,7 +97,7 @@ async def test_get_problem_details_case_sensitivity(
 
 
 @pytest.mark.asyncio
-async def test_get_problem_details_problem_with_extended_index(
+async def test_get_problem_details_with_extended_index(
     codeforces_client: CodeforcesApiClient,
     setup_mock_response,
 ) -> None:
