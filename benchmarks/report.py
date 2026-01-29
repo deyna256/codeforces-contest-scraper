@@ -47,7 +47,6 @@ def generate_comparison_report(
             pricing_dict = {
                 "prompt_price": metrics.pricing.prompt_price,
                 "completion_price": metrics.pricing.completion_price,
-                "avg_price_per_token": round(metrics.pricing.avg_price_per_token, 10),
                 "currency": metrics.pricing.currency,
             }
 
@@ -63,6 +62,7 @@ def generate_comparison_report(
             "total_prompt_tokens": metrics.total_prompt_tokens,
             "total_completion_tokens": metrics.total_completion_tokens,
             "estimated_cost_usd": round(metrics.estimated_cost, 4),
+            "cost_per_correct_prediction_usd": round(metrics.cost_per_correct_prediction, 4),
             "precision": round(metrics._calculate_precision(), 2),
             "recall": round(metrics._calculate_recall(), 2),
             "f1_score": round(metrics._calculate_f1(), 2),
@@ -88,13 +88,12 @@ def generate_comparison_report(
             ]
         }
 
-    # Sort summary by accuracy descending, then by price ascending
+    # Sort summary by accuracy descending, then by cost per correct prediction ascending
     def sort_key(item):
         accuracy = item["accuracy"]
-        # Use a very high price (1e9) if pricing is not available to push those items down
-        pricing = item.get("pricing", {})
-        avg_price = pricing.get("avg_price_per_token", 1e9) if pricing else 1e9
-        return (-accuracy, avg_price)
+        # Use a very high cost (1e9) if cost is not available to push those items down
+        cost = item.get("cost_per_correct_prediction_usd", 1e9)
+        return (-accuracy, cost)
 
     report_data["summary"].sort(key=sort_key)
 
@@ -138,11 +137,13 @@ def print_comparison_table(all_metrics: list[BenchmarkMetrics]) -> None:
     if not all_metrics:
         return
 
-    # Sort by accuracy descending, then by price ascending
+    # Sort by accuracy descending, then by cost per correct prediction ascending
     def sort_key(metrics: BenchmarkMetrics):
         accuracy = metrics.accuracy
-        avg_price = metrics.pricing.avg_price_per_token if metrics.pricing else 1e9
-        return (-accuracy, avg_price)
+        cost = (
+            metrics.cost_per_correct_prediction if metrics.cost_per_correct_prediction > 0 else 1e9
+        )
+        return (-accuracy, cost)
 
     sorted_metrics = sorted(all_metrics, key=sort_key)
 

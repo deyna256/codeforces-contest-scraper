@@ -64,10 +64,6 @@ class TrackedLLMClient(OpenRouterClient):
             return TokenUsage(prompt_tokens=0, completion_tokens=0, total_tokens=0)
         return self.last_usage
 
-    def reset_usage(self):
-        """Reset usage tracking."""
-        self.last_usage = None
-
 
 class BenchmarkRunner:
     """Runs benchmarks for editorial finder with different LLM models."""
@@ -399,6 +395,15 @@ async def main():
                 prompt_cost = metrics.total_prompt_tokens * pricing.prompt_price
                 completion_cost = metrics.total_completion_tokens * pricing.completion_price
                 metrics.estimated_cost = prompt_cost + completion_cost
+
+                # Calculate cost per correct prediction
+                correct_predictions = sum(
+                    1 for r in metrics.test_results if r.is_correct and r.error is None
+                )
+                if correct_predictions > 0:
+                    metrics.cost_per_correct_prediction = (
+                        metrics.estimated_cost / correct_predictions
+                    )
 
                 # Log with price converted to per-million format for readability
                 prompt_price_per_m = pricing.prompt_price * 1_000_000

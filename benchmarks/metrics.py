@@ -1,9 +1,7 @@
 """Metrics and results for benchmarking."""
 
-import json
 from dataclasses import dataclass, field
 from datetime import datetime
-from pathlib import Path
 from typing import Any, Optional
 
 from benchmarks.pricing import ModelPricing
@@ -37,19 +35,22 @@ class BenchmarkMetrics:
     accuracy: float  # Percentage of correct predictions
     avg_latency_ms: float
     median_latency_ms: float
-    min_latency_ms: float
-    max_latency_ms: float
     true_positives: int  # Found editorial when it exists
     false_positives: int  # Found editorial when it doesn't exist
     false_negatives: int  # Didn't find editorial when it exists
     true_negatives: int  # Correctly identified no editorial
     total_prompt_tokens: int = 0  # Total prompt tokens used
     total_completion_tokens: int = 0  # Total completion tokens used
-    total_tokens: int = 0  # Total tokens used
     avg_tokens_per_test: float = 0.0  # Average tokens per test
     pricing: Optional[ModelPricing] = None  # Pricing information from OpenRouter
     estimated_cost: float = 0.0  # Estimated cost in USD based on token usage
+    cost_per_correct_prediction: float = 0.0  # Cost per correct prediction in USD
     test_results: list[TestResult] = field(default_factory=list)
+
+    @property
+    def total_tokens(self) -> int:
+        """Calculate total tokens on the fly."""
+        return self.total_prompt_tokens + self.total_completion_tokens
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for JSON serialization."""
@@ -58,7 +59,6 @@ class BenchmarkMetrics:
             pricing_dict = {
                 "prompt_price": self.pricing.prompt_price,
                 "completion_price": self.pricing.completion_price,
-                "avg_price_per_token": round(self.pricing.avg_price_per_token, 10),
                 "currency": self.pricing.currency,
             }
 
@@ -75,8 +75,6 @@ class BenchmarkMetrics:
             "performance": {
                 "avg_latency_ms": round(self.avg_latency_ms, 2),
                 "median_latency_ms": round(self.median_latency_ms, 2),
-                "min_latency_ms": round(self.min_latency_ms, 2),
-                "max_latency_ms": round(self.max_latency_ms, 2),
             },
             "classification": {
                 "true_positives": self.true_positives,
@@ -94,6 +92,7 @@ class BenchmarkMetrics:
                 "total_tokens": self.total_tokens,
                 "avg_tokens_per_test": round(self.avg_tokens_per_test, 2),
                 "estimated_cost_usd": round(self.estimated_cost, 4),
+                "cost_per_correct_prediction_usd": round(self.cost_per_correct_prediction, 4),
             },
             "test_results": [
                 {
@@ -134,49 +133,6 @@ class BenchmarkMetrics:
             return 0.0
         return 2 * (precision * recall) / denominator
 
-    def save(self, output_dir: Path) -> Path:
-        """Save metrics to JSON file."""
-        output_dir.mkdir(parents=True, exist_ok=True)
-        filename = f"{self.model_name.replace('/', '_')}_{self.timestamp}.json"
-        filepath = output_dir / filename
-        with open(filepath, "w") as f:
-            json.dump(self.to_dict(), f, indent=2)
-        return filepath
-
-    def print_summary(self) -> None:
-        """Print formatted summary to console."""
-        print(f"\n{'=' * 70}")
-        print(f"Benchmark Results: {self.display_name}")
-        print(f"{'=' * 70}")
-        print(f"Model: {self.model_name}")
-        print(f"Timestamp: {self.timestamp}")
-        print()
-        print(f"Tests: {self.successful_tests}/{self.total_tests} successful")
-        print(f"Accuracy: {self.accuracy:.1f}%")
-        print()
-        print("Performance:")
-        print(f"  Avg Latency: {self.avg_latency_ms:.0f}ms")
-        print(f"  Median Latency: {self.median_latency_ms:.0f}ms")
-        print(f"  Range: {self.min_latency_ms:.0f}ms - {self.max_latency_ms:.0f}ms")
-        print()
-        print("Classification Metrics:")
-        print(f"  True Positives:  {self.true_positives}")
-        print(f"  False Positives: {self.false_positives}")
-        print(f"  False Negatives: {self.false_negatives}")
-        print(f"  True Negatives:  {self.true_negatives}")
-        print(f"  Precision: {self._calculate_precision():.1f}%")
-        print(f"  Recall:    {self._calculate_recall():.1f}%")
-        print(f"  F1 Score:  {self._calculate_f1():.1f}%")
-        print()
-        print("Token Usage:")
-        print(f"  Total Tokens: {self.total_tokens:,}")
-        print(f"  Prompt Tokens: {self.total_prompt_tokens:,}")
-        print(f"  Completion Tokens: {self.total_completion_tokens:,}")
-        print(f"  Avg Tokens/Test: {self.avg_tokens_per_test:.0f}")
-        if self.estimated_cost > 0:
-            print(f"  Estimated Cost: ${self.estimated_cost:.4f}")
-        print(f"{'=' * 70}\n")
-
 
 def calculate_metrics(
     model_name: str, display_name: str, results: list[TestResult]
@@ -204,8 +160,6 @@ def calculate_metrics(
     latencies = [r.latency_ms for r in results if r.error is None]
     avg_latency = sum(latencies) / len(latencies) if latencies else 0.0
     median_latency = sorted(latencies)[len(latencies) // 2] if latencies else 0.0
-    min_latency = min(latencies) if latencies else 0.0
-    max_latency = max(latencies) if latencies else 0.0
 
     # Classification metrics
     tp = sum(
@@ -228,7 +182,7 @@ def calculate_metrics(
     # Calculate token usage
     total_prompt_tokens = sum(r.prompt_tokens for r in results)
     total_completion_tokens = sum(r.completion_tokens for r in results)
-    total_tokens_used = sum(r.total_tokens for r in results)
+    total_tokens_used = total_prompt_tokens + total_completion_tokens
     avg_tokens = total_tokens_used / total_tests if total_tests > 0 else 0.0
 
     return BenchmarkMetrics(
@@ -241,15 +195,12 @@ def calculate_metrics(
         accuracy=accuracy,
         avg_latency_ms=avg_latency,
         median_latency_ms=median_latency,
-        min_latency_ms=min_latency,
-        max_latency_ms=max_latency,
         true_positives=tp,
         false_positives=fp,
         false_negatives=fn,
         true_negatives=tn,
         total_prompt_tokens=total_prompt_tokens,
         total_completion_tokens=total_completion_tokens,
-        total_tokens=total_tokens_used,
         avg_tokens_per_test=avg_tokens,
         test_results=results,
     )

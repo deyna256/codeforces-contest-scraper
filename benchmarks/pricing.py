@@ -20,11 +20,6 @@ class ModelPricing:
     completion_price: float  # Price per token for output (e.g., 0.000004 = $4.00/1M)
     currency: str = "USD"  # Assuming USD as most common
 
-    @property
-    def avg_price_per_token(self) -> float:
-        """Calculate average price per token for rough comparisons."""
-        return (self.prompt_price + self.completion_price) / 2.0
-
 
 class PricingManager:
     """Manages fetching and caching of model pricing data."""

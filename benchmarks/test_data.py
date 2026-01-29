@@ -166,34 +166,3 @@ BENCHMARK_TEST_CASES: list[TestCase] = [
     # 3. Look for "Tutorial" or "Editorial" link in sidebar
     # 4. Copy contest ID and editorial URL
 ]
-
-
-def get_test_cases(difficulty: str | None = None) -> list[TestCase]:
-    """
-    Get test cases, optionally filtered by difficulty.
-
-    Args:
-        difficulty: Filter by difficulty level ("easy", "medium", "hard") or None for all
-
-    Returns:
-        List of test cases
-    """
-    if difficulty is None:
-        return BENCHMARK_TEST_CASES
-    return [tc for tc in BENCHMARK_TEST_CASES if tc["difficulty"] == difficulty]
-
-
-def get_test_case_by_id(contest_id: str) -> TestCase | None:
-    """
-    Get a specific test case by contest ID.
-
-    Args:
-        contest_id: Contest ID to look up
-
-    Returns:
-        Test case or None if not found
-    """
-    for tc in BENCHMARK_TEST_CASES:
-        if tc["contest_id"] == contest_id:
-            return tc
-    return None
