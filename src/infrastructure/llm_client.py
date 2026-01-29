@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import Optional
 
 import httpx
+from loguru import logger
 
 
 class LLMError(Exception):
@@ -152,13 +153,10 @@ class OpenRouterClient:
                     )
                 else:
                     # Debug: log when usage is missing
-                    import sys
-                    if "pytest" not in sys.modules:  # Don't log during tests
-                        from loguru import logger
-                        logger.warning(
-                            f"OpenRouter API response for model {self.model} is missing 'usage' field. "
-                            f"Response keys: {list(data.keys())}"
-                        )
+                    logger.warning(
+                        f"OpenRouter API response for model {self.model} is missing 'usage' field. "
+                        f"Response keys: {list(data.keys())}"
+                    )
 
                 return LLMResponse(content=content.strip(), usage=usage)
 
