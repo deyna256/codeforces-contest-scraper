@@ -18,7 +18,7 @@ class TestCase(TypedDict):
 
 # Ground truth test cases
 # TODO: Expand this list with manually verified contest data
-BENCHMARK_TEST_CASES: list[TestCase] = [
+FINDER_TEST_CASES: list[TestCase] = [
     # Example cases - replace with real verified data
     {
         "contest_id": "2185",

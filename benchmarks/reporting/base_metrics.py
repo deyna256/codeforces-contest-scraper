@@ -1,25 +1,9 @@
-"""Metrics and results for benchmarking."""
+"""Base metrics and results for benchmarking."""
 
 from dataclasses import dataclass, field
-from datetime import datetime
 from typing import Any, Optional
 
 from benchmarks.pricing import ModelPricing
-
-
-@dataclass
-class TestResult:
-    """Result for a single test case."""
-
-    contest_id: str
-    expected_editorial: list[str]
-    found_editorial: list[str]
-    is_correct: bool
-    latency_ms: float
-    error: str | None = None
-    prompt_tokens: int = 0
-    completion_tokens: int = 0
-    total_tokens: int = 0
 
 
 @dataclass
@@ -45,7 +29,7 @@ class BenchmarkMetrics:
     pricing: Optional[ModelPricing] = None  # Pricing information from OpenRouter
     estimated_cost: float = 0.0  # Estimated cost in USD based on token usage
     cost_per_correct_prediction: float = 0.0  # Cost per correct prediction in USD
-    test_results: list[TestResult] = field(default_factory=list)
+    test_results: list[Any] = field(default_factory=list)
 
     @property
     def total_tokens(self) -> int:
@@ -94,21 +78,25 @@ class BenchmarkMetrics:
                 "estimated_cost_usd": round(self.estimated_cost, 4),
                 "cost_per_correct_prediction_usd": round(self.cost_per_correct_prediction, 4),
             },
-            "test_results": [
-                {
-                    "contest_id": r.contest_id,
-                    "expected": r.expected_editorial,
-                    "found": r.found_editorial,
-                    "correct": r.is_correct,
-                    "latency_ms": round(r.latency_ms, 2),
-                    "prompt_tokens": r.prompt_tokens,
-                    "completion_tokens": r.completion_tokens,
-                    "total_tokens": r.total_tokens,
-                    "error": r.error,
-                }
-                for r in self.test_results
-            ],
+            "test_results": self._serialize_test_results(),
         }
+
+    def _serialize_test_results(self) -> list[dict[str, Any]]:
+        """Serialize test results - to be overridden by subclasses if needed."""
+        return [
+            {
+                "contest_id": r.contest_id,
+                "expected": r.expected_editorial,
+                "found": r.found_editorial,
+                "correct": r.is_correct,
+                "latency_ms": round(r.latency_ms, 2),
+                "prompt_tokens": r.prompt_tokens,
+                "completion_tokens": r.completion_tokens,
+                "total_tokens": r.total_tokens,
+                "error": r.error,
+            }
+            for r in self.test_results
+        ]
 
     def _calculate_precision(self) -> float:
         """Calculate precision: TP / (TP + FP)."""
@@ -132,75 +120,3 @@ class BenchmarkMetrics:
         if denominator == 0:
             return 0.0
         return 2 * (precision * recall) / denominator
-
-
-def calculate_metrics(
-    model_name: str, display_name: str, results: list[TestResult]
-) -> BenchmarkMetrics:
-    """
-    Calculate aggregate metrics from test results.
-
-    Args:
-        model_name: Model identifier
-        display_name: Human-readable model name
-        results: List of test results
-
-    Returns:
-        Aggregated metrics
-    """
-    total_tests = len(results)
-    successful_tests = sum(1 for r in results if r.error is None)
-    failed_tests = total_tests - successful_tests
-
-    # Only consider successful tests for accuracy
-    correct = sum(1 for r in results if r.is_correct and r.error is None)
-    accuracy = (correct / successful_tests * 100) if successful_tests > 0 else 0.0
-
-    # Latency metrics (only for successful tests)
-    latencies = [r.latency_ms for r in results if r.error is None]
-    avg_latency = sum(latencies) / len(latencies) if latencies else 0.0
-    median_latency = sorted(latencies)[len(latencies) // 2] if latencies else 0.0
-
-    # Classification metrics
-    tp = sum(
-        1
-        for r in results
-        if len(r.expected_editorial) > 0 and len(r.found_editorial) > 0 and r.is_correct
-    )
-    fp = sum(
-        1
-        for r in results
-        if len(r.expected_editorial) == 0 and len(r.found_editorial) > 0 and not r.is_correct
-    )
-    fn = sum(1 for r in results if len(r.expected_editorial) > 0 and len(r.found_editorial) == 0)
-    tn = sum(
-        1
-        for r in results
-        if len(r.expected_editorial) == 0 and len(r.found_editorial) == 0 and r.is_correct
-    )
-
-    # Calculate token usage
-    total_prompt_tokens = sum(r.prompt_tokens for r in results)
-    total_completion_tokens = sum(r.completion_tokens for r in results)
-    total_tokens_used = total_prompt_tokens + total_completion_tokens
-    avg_tokens = total_tokens_used / total_tests if total_tests > 0 else 0.0
-
-    return BenchmarkMetrics(
-        model_name=model_name,
-        display_name=display_name,
-        timestamp=datetime.now().strftime("%Y%m%d_%H%M%S"),
-        total_tests=total_tests,
-        successful_tests=successful_tests,
-        failed_tests=failed_tests,
-        accuracy=accuracy,
-        avg_latency_ms=avg_latency,
-        median_latency_ms=median_latency,
-        true_positives=tp,
-        false_positives=fp,
-        false_negatives=fn,
-        true_negatives=tn,
-        total_prompt_tokens=total_prompt_tokens,
-        total_completion_tokens=total_completion_tokens,
-        avg_tokens_per_test=avg_tokens,
-        test_results=results,
-    )
