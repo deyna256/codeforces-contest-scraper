@@ -92,8 +92,19 @@ def generate_html_report(report_data: dict[str, Any], output_path: Path) -> Path
         # Generate test result rows
         test_rows = []
         for test in report_data["detailed_results"][model["model_name"]]["test_results"]:
-            expected_text = test["expected"] if test["expected"] else "None"
-            found_text = ", ".join(test["found"]) if test["found"] else "None"
+            # Handle both FinderTestResult (expected/found) and SegmentationTestResult (expected_problems/found_problems)
+            if "expected" in test:
+                # FinderTestResult format
+                expected_text = test["expected"] if test["expected"] else "None"
+                found_text = ", ".join(test["found"]) if test["found"] else "None"
+            elif "expected_problems" in test:
+                # SegmentationTestResult format
+                expected_text = ", ".join(test["expected_problems"]) if test["expected_problems"] else "None"
+                found_text = ", ".join(test["found_problems"]) if test["found_problems"] else "None"
+            else:
+                # Fallback
+                expected_text = "N/A"
+                found_text = "N/A"
 
             if test["correct"]:
                 result_class = "test-correct"

@@ -82,21 +82,47 @@ class BenchmarkMetrics:
         }
 
     def _serialize_test_results(self) -> list[dict[str, Any]]:
-        """Serialize test results - to be overridden by subclasses if needed."""
-        return [
-            {
-                "contest_id": r.contest_id,
-                "expected": r.expected_editorial,
-                "found": r.found_editorial,
-                "correct": r.is_correct,
-                "latency_ms": round(r.latency_ms, 2),
-                "prompt_tokens": r.prompt_tokens,
-                "completion_tokens": r.completion_tokens,
-                "total_tokens": r.total_tokens,
-                "error": r.error,
-            }
-            for r in self.test_results
-        ]
+        """Serialize test results - handles both Finder and Segmentation result types."""
+        results = []
+        for r in self.test_results:
+            # Determine result type and extract appropriate fields
+            if hasattr(r, "expected_editorial"):
+                # FinderTestResult
+                result_dict: dict[str, Any] = {
+                    "contest_id": r.contest_id,
+                    "expected": r.expected_editorial,
+                    "found": r.found_editorial,
+                    "correct": r.is_correct,
+                    "latency_ms": round(r.latency_ms, 2),
+                    "prompt_tokens": r.prompt_tokens,
+                    "completion_tokens": r.completion_tokens,
+                    "total_tokens": r.total_tokens,
+                    "error": r.error,
+                }
+            elif hasattr(r, "expected_problems"):
+                # SegmentationTestResult
+                result_dict = {
+                    "contest_id": r.contest_id,
+                    "expected_problems": r.expected_problems,
+                    "found_problems": r.found_problems,
+                    "problem_accuracy": r.problem_accuracy,
+                    "correct": r.is_correct,
+                    "latency_ms": round(r.latency_ms, 2),
+                    "prompt_tokens": r.prompt_tokens,
+                    "completion_tokens": r.completion_tokens,
+                    "total_tokens": r.total_tokens,
+                    "error": r.error,
+                }
+            else:
+                # Fallback for unknown result types
+                result_dict = {
+                    "contest_id": getattr(r, "contest_id", None),
+                    "correct": getattr(r, "is_correct", None),
+                    "latency_ms": round(getattr(r, "latency_ms", 0), 2),
+                    "error": getattr(r, "error", None),
+                }
+            results.append(result_dict)
+        return results
 
     def _calculate_precision(self) -> float:
         """Calculate precision: TP / (TP + FP)."""

@@ -81,10 +81,11 @@ class SegmentationRunner(BaseBenchmarkRunner[SegmentationTestCase, SegmentationT
 
         try:
             # Initialize tracked LLM client with specific model
+            # Use longer timeout for segmentation tasks
             llm_client = TrackedLLMClient(
                 api_key=self.api_key,
                 model=model_config["name"],
-                timeout=model_config["timeout"],
+                timeout=model_config["timeout_segmentation"],
             )
 
             # Create editorial content parser
