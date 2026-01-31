@@ -19,7 +19,7 @@ from infrastructure.parsers.errors import (
     LLMSegmentationError,
 )
 from api.exceptions import exception_to_http_response
-from api.routes import CacheController, ContestController, EditorialController, ProblemController
+from api.routes import CacheController, ContestController, ProblemController
 
 
 def create_app() -> Litestar:
@@ -62,7 +62,7 @@ def create_app() -> Litestar:
     )
 
     app = Litestar(
-        route_handlers=[CacheController, ContestController, EditorialController, ProblemController],
+        route_handlers=[CacheController, ContestController, ProblemController],
         stores=stores,
         middleware=middleware,
         exception_handlers=exception_handlers,
