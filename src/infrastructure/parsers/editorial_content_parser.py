@@ -191,9 +191,9 @@ class EditorialContentParser:
             Cleaned BeautifulSoup element
         """
         # Make a copy to avoid modifying original
-        from copy import copy
+        from copy import deepcopy
 
-        cleaned = copy(element)
+        cleaned = deepcopy(element)
 
         # Remove comment sections and user-generated content
         unwanted_selectors = [
@@ -464,7 +464,6 @@ Return JSON with contest_id, problem_id, start_marker, and end_marker for each p
             max_tokens=4000,  # Reduced - we only need markers, not full text
         )
 
-
         # Parse response with fallback, passing original text for extraction
         return self._parse_llm_response(response, contest_id, expected_problems, editorial_text)
 
@@ -508,7 +507,7 @@ Return JSON with contest_id, problem_id, start_marker, and end_marker for each p
             for i in range(len(problem_id) - 1, -1, -1):
                 if not (problem_id[i].isalpha() or problem_id[i].isdigit()):
                     # Found non-alphanumeric, take everything after it
-                    result = problem_id[i + 1:]
+                    result = problem_id[i + 1 :]
                     if result and result[0].isalpha():
                         return result
                     break
@@ -622,7 +621,7 @@ Return JSON with contest_id, problem_id, start_marker, and end_marker for each p
                 # Check if this quote is escaped by looking at preceding backslashes
                 num_backslashes = 0
                 j = i - 1
-                while j >= 0 and json_str[j] == '\\':
+                while j >= 0 and json_str[j] == "\\":
                     num_backslashes += 1
                     j -= 1
 
@@ -636,38 +635,46 @@ Return JSON with contest_id, problem_id, start_marker, and end_marker for each p
 
             # Inside string values, handle special characters
             if in_string:
-                if char == '\\':
+                if char == "\\":
                     # Check if this backslash is already escaped (preceded by another backslash)
                     # We need to check if we just added a backslash to result
-                    if i + 1 < len(json_str) and json_str[i + 1] == '\\':
+                    if i + 1 < len(json_str) and json_str[i + 1] == "\\":
                         # This is \\, keep both backslashes as-is (already escaped)
-                        result.append('\\')
-                        result.append('\\')
+                        result.append("\\")
+                        result.append("\\")
                         i += 2  # Skip both backslashes
-                    elif i + 1 < len(json_str) and json_str[i + 1] in ('"', 'n', 't', 'r', 'b', 'f', '/'):
+                    elif i + 1 < len(json_str) and json_str[i + 1] in (
+                        '"',
+                        "n",
+                        "t",
+                        "r",
+                        "b",
+                        "f",
+                        "/",
+                    ):
                         # Valid escape sequence - keep as is
-                        result.append('\\')
+                        result.append("\\")
                         result.append(json_str[i + 1])
                         i += 2
                     else:
                         # Single backslash - escape it
-                        result.append('\\\\')
+                        result.append("\\\\")
                         i += 1
                 # Handle control characters that should be escaped
-                elif char == '\n':
-                    result.append('\\n')
+                elif char == "\n":
+                    result.append("\\n")
                     i += 1
-                elif char == '\t':
-                    result.append('\\t')
+                elif char == "\t":
+                    result.append("\\t")
                     i += 1
-                elif char == '\r':
-                    result.append('\\r')
+                elif char == "\r":
+                    result.append("\\r")
                     i += 1
-                elif char == '\b':
-                    result.append('\\b')
+                elif char == "\b":
+                    result.append("\\b")
                     i += 1
-                elif char == '\f':
-                    result.append('\\f')
+                elif char == "\f":
+                    result.append("\\f")
                     i += 1
                 else:
                     result.append(char)
@@ -676,7 +683,7 @@ Return JSON with contest_id, problem_id, start_marker, and end_marker for each p
                 result.append(char)
                 i += 1
 
-        return ''.join(result)
+        return "".join(result)
 
     def _parse_llm_response(
         self,
@@ -748,18 +755,21 @@ Return JSON with contest_id, problem_id, start_marker, and end_marker for each p
 
             # Save the problematic response for debugging
             try:
-                import tempfile
+                import re
                 from pathlib import Path
+
+                # Sanitize contest_id to prevent path traversal
+                safe_contest_id = re.sub(r"[^a-zA-Z0-9_-]", "_", primary_contest_id)
 
                 debug_dir = Path.home() / ".cache" / "codeforces-editorial"
                 debug_dir.mkdir(parents=True, exist_ok=True)
-                debug_file = debug_dir / f"failed_llm_response_{primary_contest_id}.txt"
+                debug_file = debug_dir / f"failed_llm_response_{safe_contest_id}.txt"
 
                 with open(debug_file, "w", encoding="utf-8") as f:
                     f.write("=== Original Response ===\n")
                     f.write(response)
                     f.write("\n\n=== Attempted JSON Content ===\n")
-                    f.write(json_content if 'json_content' in locals() else "N/A")
+                    f.write(json_content if "json_content" in locals() else "N/A")
 
                 logger.debug(f"Saved problematic LLM response to: {debug_file}")
             except Exception as debug_error:
@@ -812,9 +822,7 @@ Return JSON with contest_id, problem_id, start_marker, and end_marker for each p
         logger.warning("LLM returned old format (no contest_id), using fallback")
         return self._parse_old_format(result, primary_contest_id)
 
-    def _extract_text_between_markers(
-        self, text: str, start_marker: str, end_marker: str
-    ) -> str:
+    def _extract_text_between_markers(self, text: str, start_marker: str, end_marker: str) -> str:
         """
         Extract text between start and end markers.
 

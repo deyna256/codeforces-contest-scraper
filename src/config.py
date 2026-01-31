@@ -1,5 +1,6 @@
 """Configuration module for codeforces-editorial-finder."""
 
+import threading
 from pathlib import Path
 from typing import Optional
 
@@ -73,17 +74,22 @@ class Settings(BaseSettings):
 
 # Singleton instance
 _settings: Optional[Settings] = None
+_settings_lock = threading.Lock()
 
 
 def get_settings() -> Settings:
     """Get or create settings singleton instance."""
     global _settings
     if _settings is None:
-        _settings = Settings()
+        with _settings_lock:
+            if _settings is None:
+                _settings = Settings()
+    assert _settings is not None
     return _settings
 
 
 def reset_settings() -> None:
     """Reset settings singleton (useful for testing)."""
     global _settings
-    _settings = None
+    with _settings_lock:
+        _settings = None
