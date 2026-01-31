@@ -10,6 +10,7 @@ from domain.models.identifiers import ProblemIdentifier
 
 from .interfaces import ParsingError
 from .llm_editorial_finder import LLMEditorialFinder
+from .html_utils import extract_time_limit, extract_memory_limit, extract_description
 
 if TYPE_CHECKING:
     from infrastructure.http_client import AsyncHTTPClient
@@ -76,10 +77,10 @@ class ContestPageParser:
             html = await self.http_client.get_text(url)
             soup = BeautifulSoup(html, "lxml")
 
-            # Extract data using same methods as ProblemPageParser
-            description = self._extract_description(soup)
-            time_limit = self._extract_time_limit(soup)
-            memory_limit = self._extract_memory_limit(soup)
+            # Extract data using shared HTML parsing utilities
+            description = extract_description(soup)
+            time_limit = extract_time_limit(soup)
+            memory_limit = extract_memory_limit(soup)
 
             identifier = ProblemIdentifier(
                 contest_id=contest_id,
@@ -167,88 +168,3 @@ class ContestPageParser:
         except Exception:
             logger.exception(f"Error in regex editorial URL extraction for contest {contest_id}")
             return []
-
-    def _extract_time_limit(self, soup: BeautifulSoup) -> Optional[str]:
-        """Extract time limit from problem page."""
-        try:
-            problem_statement = soup.find("div", class_="problem-statement")
-            if not problem_statement:
-                return None
-
-            header = problem_statement.find("div", class_="header")
-            if not header:
-                return None
-
-            time_limit = header.find("div", class_="time-limit")
-            if time_limit:
-                text = time_limit.get_text(strip=True)
-                if "time limit per test" in text.lower():
-                    text = text.lower().replace("time limit per test", "").strip()
-                return text
-
-            return None
-        except Exception:
-            return None
-
-    def _extract_memory_limit(self, soup: BeautifulSoup) -> Optional[str]:
-        """Extract memory limit from problem page."""
-        try:
-            problem_statement = soup.find("div", class_="problem-statement")
-            if not problem_statement:
-                return None
-
-            header = problem_statement.find("div", class_="header")
-            if not header:
-                return None
-
-            memory_limit = header.find("div", class_="memory-limit")
-            if memory_limit:
-                text = memory_limit.get_text(strip=True)
-                if "memory limit per test" in text.lower():
-                    text = text.lower().replace("memory limit per test", "").strip()
-                return text
-
-            return None
-        except Exception:
-            return None
-
-    def _extract_description(self, soup: BeautifulSoup) -> Optional[str]:
-        """Extract problem statement/description."""
-        try:
-            problem_statement = soup.find("div", class_="problem-statement")
-            if not problem_statement:
-                return None
-
-            text_parts = []
-
-            # Get main sections
-            for section_class in [
-                "",
-                "input-specification",
-                "output-specification",
-                "sample-tests",
-                "note",
-            ]:
-                if section_class:
-                    section = problem_statement.find("div", class_=section_class)
-                else:
-                    all_divs = problem_statement.find_all("div", recursive=False)
-                    for div in all_divs:
-                        if not div.get("class") or div.get("class") == [""]:
-                            section = div
-                            break
-                    else:
-                        section = None
-
-                if section:
-                    section_text = section.get_text(separator="\n", strip=True)
-                    if section_text:
-                        text_parts.append(section_text)
-
-            if text_parts:
-                return "\n\n".join(text_parts)
-
-            return problem_statement.get_text(separator="\n", strip=True)
-
-        except Exception:
-            return None
