@@ -1,7 +1,6 @@
 """Service for handling contest-related operations."""
 
 import asyncio
-from typing import TYPE_CHECKING
 
 from loguru import logger
 
@@ -13,9 +12,6 @@ from infrastructure.parsers import (
     URLParser,
 )
 from infrastructure.parsers.editorial_content_parser import EditorialContentParser
-
-if TYPE_CHECKING:
-    pass
 
 
 class ContestService:

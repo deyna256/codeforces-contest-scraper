@@ -1,17 +1,11 @@
 from collections.abc import AsyncGenerator
-from typing import TYPE_CHECKING
 
 from loguru import logger
 
 from infrastructure.cache_redis import AsyncRedisCache
 
-if TYPE_CHECKING:
-    from litestar.datastructures import State
 
-
-async def provide_cache_client(
-    state: "State",
-) -> AsyncGenerator[tuple[AsyncRedisCache | None, bool], None]:
+async def provide_cache_client() -> AsyncGenerator[tuple[AsyncRedisCache | None, bool], None]:
     client = AsyncRedisCache()
     use_cache = False
 

@@ -1,15 +1,10 @@
 """Service for handling problem-related operations."""
 
-from typing import TYPE_CHECKING
-
 from loguru import logger
 
 from domain.models.problem import Problem
 from domain.models.identifiers import ProblemIdentifier
 from infrastructure.parsers import URLParser, APIClientProtocol, ProblemPageParserProtocol
-
-if TYPE_CHECKING:
-    pass
 
 
 class ProblemService:
