@@ -133,13 +133,16 @@ class EditorialContentParser:
 
     def _extract_blog_content(self, soup: BeautifulSoup) -> str:
         """
-        Extract main content from Codeforces blog entry.
+        Extract main content from Codeforces blog entry with smart HTML cleanup.
+
+        This removes all unnecessary elements (comments, UI, navigation) before
+        extracting text, ensuring LLM gets only editorial content.
 
         Args:
             soup: Parsed HTML content
 
         Returns:
-            Extracted blog text content
+            Cleaned editorial text content with preserved structure
         """
         # Try to find the main blog content
         content_selectors = [
@@ -153,10 +156,9 @@ class EditorialContentParser:
         for selector in content_selectors:
             content_element = soup.select_one(selector)
             if content_element:
-                text = content_element.get_text(separator="\n", strip=True)
-
-                # Clean up the text
-                text = self._clean_extracted_text(text)
+                # Clean HTML before extracting text
+                cleaned_element = self._clean_html_content(content_element)
+                text = self._extract_text_with_structure(cleaned_element)
 
                 if len(text.strip()) > 200:  # Minimum viable content length
                     return text
@@ -164,10 +166,123 @@ class EditorialContentParser:
         # Fallback: search for any large text block
         body = soup.find("body")
         if body:
-            text = body.get_text(separator="\n", strip=True)
-            return self._clean_extracted_text(text)
+            cleaned_body = self._clean_html_content(body)
+            text = self._extract_text_with_structure(cleaned_body)
+            return text
 
         return ""
+
+    def _clean_html_content(self, element) -> BeautifulSoup:
+        """
+        Remove unnecessary HTML elements from parsed content.
+
+        Removes:
+        - Comments section
+        - User avatars and profiles
+        - Vote buttons and controls
+        - Navigation elements
+        - Advertisements
+        - Scripts and styles
+
+        Args:
+            element: BeautifulSoup element to clean
+
+        Returns:
+            Cleaned BeautifulSoup element
+        """
+        # Make a copy to avoid modifying original
+        from copy import copy
+
+        cleaned = copy(element)
+
+        # Remove comment sections and user-generated content
+        unwanted_selectors = [
+            ".comments",  # Comments section
+            ".comment",  # Individual comments
+            "#comments",
+            ".comment-table",
+            ".userbox",  # User profile boxes
+            ".avatar",  # User avatars
+            ".roundbox.menu-box",  # Navigation menus
+            ".menu",
+            ".sidebar",
+            ".footer",
+            ".header",
+            ".voted-count",  # Vote buttons
+            ".vote-controls",
+            ".community-menu",
+            ".lang-chooser",
+            "script",  # Scripts
+            "style",  # Inline styles
+            "noscript",
+            ".signature",  # User signatures
+            "form",  # Forms (login, search, etc.)
+            "input",
+            "button",
+            ".share-buttons",  # Social media buttons
+            ".advertisement",
+            ".ad",
+            "[id^='google_ads']",  # Google ads
+            "iframe",  # Embedded content
+        ]
+
+        for selector in unwanted_selectors:
+            for elem in cleaned.select(selector):
+                elem.decompose()
+
+        return cleaned
+
+    def _extract_text_with_structure(self, element) -> str:
+        """
+        Extract text while preserving document structure using markdown-like format.
+
+        This helps LLM understand the document hierarchy:
+        - Preserves headings (H1, H2, H3)
+        - Separates paragraphs
+        - Keeps code blocks identifiable
+
+        Args:
+            element: Cleaned BeautifulSoup element
+
+        Returns:
+            Structured text content
+        """
+        lines = []
+
+        # Process all child elements to preserve structure
+        for child in element.descendants:
+            # Skip navigable strings that are only whitespace
+            if isinstance(child, str):
+                text = child.strip()
+                if text and not text.isspace():
+                    # Only add if not already added (avoid duplicates)
+                    if not lines or lines[-1] != text:
+                        lines.append(text)
+                continue
+
+            # Handle headings
+            if child.name in ["h1", "h2", "h3", "h4", "h5", "h6"]:
+                level = int(child.name[1])
+                heading_text = child.get_text(strip=True)
+                if heading_text:
+                    # Add markdown-style heading
+                    lines.append("\n" + "#" * level + " " + heading_text + "\n")
+
+            # Handle code blocks
+            elif child.name == "pre":
+                code_text = child.get_text(strip=True)
+                if code_text:
+                    lines.append("\n```\n" + code_text + "\n```\n")
+
+            # Handle paragraphs
+            elif child.name == "p":
+                para_text = child.get_text(strip=True)
+                if para_text:
+                    lines.append("\n" + para_text + "\n")
+
+        # Join and clean
+        text = "\n".join(lines)
+        return self._clean_extracted_text(text)
 
     def _clean_extracted_text(self, text: str) -> str:
         """
@@ -275,34 +390,46 @@ class EditorialContentParser:
         assert self.llm_client is not None, "LLM client must be initialized"
 
         # Truncate text if too long (LLM token limits)
-        max_chars = 40000  # Conservative limit
+        # Claude 3.5 Haiku has 200k token context (~600k-800k chars)
+        # We only ask for markers (not full text), so we can handle large editorials
+        max_chars = 300000  # ~75k tokens - safe for most editorials
         if len(editorial_text) > max_chars:
             editorial_text = editorial_text[:max_chars] + "\n\n[CONTENT TRUNCATED DUE TO LENGTH]"
             logger.warning(
                 f"Truncated editorial text for contest {contest_id} to {max_chars} chars"
             )
 
-        system_prompt = """You are an expert at analyzing Codeforces contest editorials.
-Your task is to identify each individual problem's solution and extract the EXACT original text.
+        system_prompt = r"""You are an expert at analyzing Codeforces contest editorials.
+Your task is to identify where each problem's solution starts and ends in the editorial text.
 
 CRITICAL INSTRUCTIONS:
 1. Editorials often cover MULTIPLE contests (e.g., Div1 + Div2) in ONE blog post.
    You MUST identify the contest ID for each problem to avoid confusion.
 
-2. EXTRACT THE EXACT ORIGINAL TEXT - DO NOT REPHRASE, SUMMARIZE, OR MODIFY!
-   Copy the author's text verbatim, word-for-word, including:
-   - All mathematical notation and formulas
-   - All code snippets and examples
-   - All technical details and explanations
-   - The complete solution from start to finish
+2. DO NOT extract or copy the full text - only identify boundaries!
+   For each problem, find:
+   - A unique text marker that indicates where the problem's solution STARTS
+   - A unique text marker that indicates where the problem's solution ENDS
 
-   Your job is to LOCATE and EXTRACT, not to rewrite or summarize!
+   These markers should be actual text from the editorial (e.g., "Problem A", "2189A", "Solution for A", etc.)
+
+3. Return ONLY metadata about problem locations, not the full text content.
 
 Return this JSON format:
 {
   "problems": [
-    {"contest_id": "1900", "problem_id": "A", "analysis": "EXACT original text from editorial..."},
-    {"contest_id": "1901", "problem_id": "A", "analysis": "EXACT original text from editorial..."}
+    {
+      "contest_id": "1900",
+      "problem_id": "A",
+      "start_marker": "Problem A",
+      "end_marker": "Problem B"
+    },
+    {
+      "contest_id": "1900",
+      "problem_id": "B",
+      "start_marker": "Problem B",
+      "end_marker": "Problem C"
+    }
   ]
 }
 
@@ -310,7 +437,8 @@ Guidelines:
 - Look for contest IDs in: problem headers (e.g., "1900A"), section titles, blog text
 - Use uppercase letters for problem_id (A, B, C, etc.)
 - contest_id should be numeric string (e.g., "1900", "1901")
-- Copy the COMPLETE original text for each problem - do not shorten or paraphrase
+- start_marker and end_marker should be unique text snippets (10-50 characters) that appear in the editorial
+- For the last problem, end_marker can be empty string "" if no clear ending
 - If contest ID is ambiguous, infer from context or use the primary contest ID
 - Return valid JSON only, no extra text"""
 
@@ -321,10 +449,11 @@ Expected problems: {self._format_expected_problems(expected_problems)}
 Full editorial text:
 {editorial_text}
 
-IMPORTANT: Extract the EXACT original text for each problem's solution. Copy word-for-word from the editorial above.
-Do NOT rephrase, summarize, or shorten the text. Include everything: math formulas, code, explanations.
+IMPORTANT: Identify the START and END markers for each problem's solution.
+Find unique text snippets that mark where each problem begins and ends.
+Do NOT copy the full text - only return the boundary markers.
 
-Return JSON with contest_id, problem_id, and the COMPLETE original analysis text."""
+Return JSON with contest_id, problem_id, start_marker, and end_marker for each problem."""
 
         logger.debug(f"Sending LLM segmentation request for contest {contest_id}")
 
@@ -332,15 +461,16 @@ Return JSON with contest_id, problem_id, and the COMPLETE original analysis text
             prompt=user_prompt,
             system_prompt=system_prompt,
             temperature=0.0,  # Deterministic segmentation
-            max_tokens=16000,  # Allow for complete original text without truncation
+            max_tokens=4000,  # Reduced - we only need markers, not full text
         )
 
-        # Parse response with fallback
-        return self._parse_llm_response(response, contest_id, expected_problems)
+
+        # Parse response with fallback, passing original text for extraction
+        return self._parse_llm_response(response, contest_id, expected_problems, editorial_text)
 
     def _normalize_problem_id(self, problem_id: str) -> Optional[str]:
         """
-        Normalize problem ID to standard format (A, B, C, etc.).
+        Normalize problem ID to standard format (A, B, C, C1, C2, D1, D2, etc.).
 
         Args:
             problem_id: Raw problem identifier
@@ -351,28 +481,50 @@ Return JSON with contest_id, problem_id, and the COMPLETE original analysis text
         if not problem_id or not isinstance(problem_id, str):
             return None
 
-        # Extract first letter and convert to uppercase
+        # Extract and convert to uppercase
         problem_id = problem_id.strip().upper()
 
-        # Handle common patterns
+        # Handle single letter (A, B, C, etc.)
         if len(problem_id) == 1 and problem_id.isalpha():
             return problem_id
 
-        # Handle patterns like "Problem A", "Задача A" - extract the last letter
+        # Handle patterns like "Problem A", "Задача A" - extract the last part
         if problem_id.startswith("PROBLEM ") or problem_id.startswith("ЗАДАЧА "):
             parts = problem_id.split()
-            if len(parts) >= 2 and parts[-1].isalpha() and len(parts[-1]) == 1:
-                return parts[-1]
+            if len(parts) >= 2:
+                last_part = parts[-1]
+                # Check if it's letter + optional digit (A, C1, D2)
+                if len(last_part) <= 2 and last_part[0].isalpha():
+                    return last_part
 
-        # Handle patterns like "A.", "1900A"
-        # First check if it ends with a letter (like "1900A")
+        # Handle patterns like "C1", "C2", "D1", "D2" (letter + digit)
+        if len(problem_id) == 2 and problem_id[0].isalpha() and problem_id[1].isdigit():
+            return problem_id
+
+        # Handle patterns like "1900A", "1900C1" - extract letter part from end
+        # Find where letters start from the end
         if problem_id and problem_id[-1].isalpha():
-            return problem_id[-1]
+            # Extract trailing letter (possibly with digit before it)
+            for i in range(len(problem_id) - 1, -1, -1):
+                if not (problem_id[i].isalpha() or problem_id[i].isdigit()):
+                    # Found non-alphanumeric, take everything after it
+                    result = problem_id[i + 1:]
+                    if result and result[0].isalpha():
+                        return result
+                    break
+            else:
+                # All alphanumeric, find first letter
+                for i, char in enumerate(problem_id):
+                    if char.isalpha():
+                        return problem_id[i:]
 
-        # Handle patterns where first character is the letter
-        first_char = problem_id[0]
-        if first_char.isalpha():
-            return first_char
+        # Handle patterns where first character is the letter (fallback)
+        if problem_id[0].isalpha():
+            # Extract letter and following digits if any
+            result = problem_id[0]
+            if len(problem_id) > 1 and problem_id[1].isdigit():
+                result += problem_id[1]
+            return result
 
         return None
 
@@ -384,40 +536,329 @@ Return JSON with contest_id, problem_id, and the COMPLETE original analysis text
         formatted = ", ".join([f"{cid}/{pid}" for cid, pid in expected_problems])
         return f"{formatted}"
 
+    def _attempt_json_repair(self, json_str: str) -> str | None:
+        """
+        Attempt to repair common JSON structural issues.
+
+        Args:
+            json_str: Potentially broken JSON string
+
+        Returns:
+            Repaired JSON string if successful, None otherwise
+        """
+        try:
+            # Common repair: truncated response - try to close unclosed structures
+            repaired = json_str.strip()
+
+            # Count braces and brackets to detect truncation
+            open_braces = repaired.count("{") - repaired.count("}")
+            open_brackets = repaired.count("[") - repaired.count("]")
+
+            # Check if we're inside a string by counting quotes
+            quote_count = 0
+            escaped = False
+            for char in repaired:
+                if char == "\\" and not escaped:
+                    escaped = True
+                    continue
+                if char == '"' and not escaped:
+                    quote_count += 1
+                escaped = False
+
+            # If odd number of quotes, we have an unclosed string
+            if quote_count % 2 == 1:
+                # Try to close the string
+                repaired += '"'
+
+            # Remove trailing comma before closing brace/bracket (common LLM error)
+            repaired = repaired.rstrip()
+            if repaired.endswith(","):
+                repaired = repaired[:-1].rstrip()
+
+            # Close any unclosed arrays
+            repaired += "]" * open_brackets
+
+            # Close any unclosed objects
+            repaired += "}" * open_braces
+
+            # Try to parse the repaired JSON
+            json.loads(repaired)
+            return repaired
+
+        except (json.JSONDecodeError, Exception):
+            return None
+
+    def _sanitize_json_string(self, json_str: str) -> str:
+        r"""
+        Sanitize JSON string by fixing common issues with escape sequences.
+
+        This specifically handles LaTeX formulas and other backslashes that aren't
+        properly escaped by the LLM. The strategy is to escape all single backslashes
+        inside string values (converting \ to \\), while preserving already-escaped
+        backslashes (\\).
+
+        Args:
+            json_str: Raw JSON string from LLM
+
+        Returns:
+            Sanitized JSON string ready for parsing
+        """
+        # First, try to parse as-is - if it works, no sanitization needed
+        try:
+            json.loads(json_str)
+            return json_str  # Already valid JSON
+        except json.JSONDecodeError:
+            pass  # Need to sanitize
+
+        result = []
+        i = 0
+        in_string = False
+
+        while i < len(json_str):
+            char = json_str[i]
+
+            # Track when we're inside a string value (simple heuristic)
+            if char == '"':
+                # Check if this quote is escaped by looking at preceding backslashes
+                num_backslashes = 0
+                j = i - 1
+                while j >= 0 and json_str[j] == '\\':
+                    num_backslashes += 1
+                    j -= 1
+
+                # If even number of backslashes (including 0), quote is not escaped
+                if num_backslashes % 2 == 0:
+                    in_string = not in_string
+
+                result.append(char)
+                i += 1
+                continue
+
+            # Inside string values, handle special characters
+            if in_string:
+                if char == '\\':
+                    # Check if this backslash is already escaped (preceded by another backslash)
+                    # We need to check if we just added a backslash to result
+                    if i + 1 < len(json_str) and json_str[i + 1] == '\\':
+                        # This is \\, keep both backslashes as-is (already escaped)
+                        result.append('\\')
+                        result.append('\\')
+                        i += 2  # Skip both backslashes
+                    elif i + 1 < len(json_str) and json_str[i + 1] in ('"', 'n', 't', 'r', 'b', 'f', '/'):
+                        # Valid escape sequence - keep as is
+                        result.append('\\')
+                        result.append(json_str[i + 1])
+                        i += 2
+                    else:
+                        # Single backslash - escape it
+                        result.append('\\\\')
+                        i += 1
+                # Handle control characters that should be escaped
+                elif char == '\n':
+                    result.append('\\n')
+                    i += 1
+                elif char == '\t':
+                    result.append('\\t')
+                    i += 1
+                elif char == '\r':
+                    result.append('\\r')
+                    i += 1
+                elif char == '\b':
+                    result.append('\\b')
+                    i += 1
+                elif char == '\f':
+                    result.append('\\f')
+                    i += 1
+                else:
+                    result.append(char)
+                    i += 1
+            else:
+                result.append(char)
+                i += 1
+
+        return ''.join(result)
+
     def _parse_llm_response(
         self,
         response: str,
         primary_contest_id: str,
         expected_problems: List[tuple[str, str]] | None,
+        editorial_text: str | None = None,
     ) -> Dict[tuple[str, str], str]:
         """
         Parse LLM response with format detection and fallback.
+
+        Args:
+            response: LLM response containing problem boundaries
+            primary_contest_id: Primary contest ID
+            expected_problems: Expected problems list
+            editorial_text: Original editorial text for extraction
 
         Returns:
             Dict mapping (contest_id, problem_letter) -> analysis_text
         """
         try:
+            # Try to extract JSON from markdown code blocks first
+            if "```json" in response:
+                json_start = response.find("```json") + 7
+                json_end = response.find("```", json_start)
+                if json_end != -1:
+                    json_content = response[json_start:json_end].strip()
+                    # Sanitize before parsing
+                    json_content = self._sanitize_json_string(json_content)
+                    result = json.loads(json_content)
+                    logger.debug("Extracted JSON from markdown code block")
+                    return self._process_parsed_json(result, primary_contest_id, editorial_text)
+
+            # Try to find JSON object boundaries
             json_start = response.find("{")
             if json_start == -1:
-                raise ValueError("No JSON found")
+                raise ValueError("No JSON found in response")
 
-            json_content = response[json_start:].strip()
-            result = json.loads(json_content)
+            # Find matching closing brace
+            json_end = self._find_matching_brace(response, json_start)
+            if json_end == -1:
+                # Fallback to taking everything after {
+                json_content = response[json_start:].strip()
+            else:
+                json_content = response[json_start : json_end + 1].strip()
 
-            # Try new format first
-            if "problems" in result and isinstance(result["problems"], list):
-                return self._parse_new_format(result["problems"])
+            # Sanitize before parsing
+            json_content = self._sanitize_json_string(json_content)
 
-            # Fallback to old format
-            logger.warning("LLM returned old format (no contest_id), using fallback")
-            return self._parse_old_format(result, primary_contest_id)
+            # Try to parse
+            try:
+                result = json.loads(json_content)
+                return self._process_parsed_json(result, primary_contest_id, editorial_text)
+            except json.JSONDecodeError as parse_error:
+                # Attempt to repair truncated JSON (missing closing braces)
+                logger.debug(f"Initial parse failed: {parse_error}, attempting repair...")
+                repaired = self._attempt_json_repair(json_content)
+                if repaired:
+                    result = json.loads(repaired)
+                    logger.warning(
+                        f"Successfully parsed repaired JSON for contest {primary_contest_id}"
+                    )
+                    return self._process_parsed_json(result, primary_contest_id, editorial_text)
+                raise  # Re-raise if repair didn't work
 
         except (json.JSONDecodeError, ValueError) as e:
             logger.error(f"Failed to parse LLM response: {e}")
+            logger.debug(f"Response preview (first 500 chars): {response[:500]}")
+
+            # Save the problematic response for debugging
+            try:
+                import tempfile
+                from pathlib import Path
+
+                debug_dir = Path.home() / ".cache" / "codeforces-editorial"
+                debug_dir.mkdir(parents=True, exist_ok=True)
+                debug_file = debug_dir / f"failed_llm_response_{primary_contest_id}.txt"
+
+                with open(debug_file, "w", encoding="utf-8") as f:
+                    f.write("=== Original Response ===\n")
+                    f.write(response)
+                    f.write("\n\n=== Attempted JSON Content ===\n")
+                    f.write(json_content if 'json_content' in locals() else "N/A")
+
+                logger.debug(f"Saved problematic LLM response to: {debug_file}")
+            except Exception as debug_error:
+                logger.debug(f"Could not save debug file: {debug_error}")
+
             raise LLMSegmentationError(primary_contest_id, response) from e
 
-    def _parse_new_format(self, problems: list) -> Dict[tuple[str, str], str]:
-        """Parse new format: [{"contest_id": "1900", "problem_id": "A", "analysis": "..."}]"""
+    def _find_matching_brace(self, text: str, start: int) -> int:
+        """Find the matching closing brace for an opening brace at start position."""
+        count = 0
+        in_string = False
+        escape = False
+
+        for i in range(start, len(text)):
+            char = text[i]
+
+            # Handle string escaping
+            if escape:
+                escape = False
+                continue
+            if char == "\\":
+                escape = True
+                continue
+
+            # Handle string delimiters
+            if char == '"' and not escape:
+                in_string = not in_string
+                continue
+
+            # Count braces outside strings
+            if not in_string:
+                if char == "{":
+                    count += 1
+                elif char == "}":
+                    count -= 1
+                    if count == 0:
+                        return i
+
+        return -1
+
+    def _process_parsed_json(
+        self, result: dict, primary_contest_id: str, editorial_text: str | None = None
+    ) -> Dict[tuple[str, str], str]:
+        """Process parsed JSON result and return formatted dict."""
+        # Try new format first
+        if "problems" in result and isinstance(result["problems"], list):
+            return self._parse_new_format(result["problems"], editorial_text)
+
+        # Fallback to old format
+        logger.warning("LLM returned old format (no contest_id), using fallback")
+        return self._parse_old_format(result, primary_contest_id)
+
+    def _extract_text_between_markers(
+        self, text: str, start_marker: str, end_marker: str
+    ) -> str:
+        """
+        Extract text between start and end markers.
+
+        Args:
+            text: Full editorial text
+            start_marker: Text marker indicating start of section
+            end_marker: Text marker indicating end of section (empty string = until end)
+
+        Returns:
+            Extracted text between markers, or empty string if markers not found
+        """
+        # Find start position
+        start_pos = text.find(start_marker)
+        if start_pos == -1:
+            logger.warning(f"Start marker not found: {start_marker[:50]}...")
+            return ""
+
+        # Start after the marker
+        start_pos += len(start_marker)
+
+        # Find end position
+        if end_marker:
+            end_pos = text.find(end_marker, start_pos)
+            if end_pos == -1:
+                # End marker not found - take until end of text
+                logger.debug(f"End marker not found, taking text until end: {end_marker[:50]}...")
+                extracted = text[start_pos:].strip()
+            else:
+                extracted = text[start_pos:end_pos].strip()
+        else:
+            # No end marker - take until end of text
+            extracted = text[start_pos:].strip()
+
+        return extracted
+
+    def _parse_new_format(
+        self, problems: list, editorial_text: str | None = None
+    ) -> Dict[tuple[str, str], str]:
+        """
+        Parse new format with markers and extract text.
+
+        New format: [{"contest_id": "1900", "problem_id": "A", "start_marker": "...", "end_marker": "..."}]
+        Old format (fallback): [{"contest_id": "1900", "problem_id": "A", "analysis": "..."}]
+        """
         clean_result = {}
         for item in problems:
             if not isinstance(item, dict):
@@ -425,11 +866,26 @@ Return JSON with contest_id, problem_id, and the COMPLETE original analysis text
 
             contest_id = str(item.get("contest_id", "")).strip()
             problem_id = self._normalize_problem_id(item.get("problem_id", ""))
-            analysis = item.get("analysis", "").strip()
 
-            if contest_id and problem_id and analysis:
-                key = (contest_id, problem_id)
-                clean_result[key] = analysis
+            # Check if this is new marker-based format
+            if "start_marker" in item and editorial_text:
+                start_marker = item.get("start_marker", "").strip()
+                end_marker = item.get("end_marker", "").strip()
+
+                if contest_id and problem_id and start_marker:
+                    # Extract text between markers
+                    analysis = self._extract_text_between_markers(
+                        editorial_text, start_marker, end_marker
+                    )
+                    if analysis:
+                        key = (contest_id, problem_id)
+                        clean_result[key] = analysis
+            else:
+                # Old format fallback - analysis text is directly in JSON
+                analysis = item.get("analysis", "").strip()
+                if contest_id and problem_id and analysis:
+                    key = (contest_id, problem_id)
+                    clean_result[key] = analysis
 
         logger.info(f"Parsed {len(clean_result)} editorials with contest IDs")
         return clean_result
